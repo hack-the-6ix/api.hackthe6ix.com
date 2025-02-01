@@ -69,10 +69,7 @@ export const cleanObject = (
 };
 
 /**
- * Fetch an object with mongo query
- *
- * WARNING: Only allow admins/trusted users to have unfiltered access this function. It may be possible to have
- *          arbitrary code execution if care is not taken.
+ * Fetch an object and the total number of the objects with mongo query
  *
  * @param requestUser
  * @param objectTypeName
@@ -201,6 +198,143 @@ export const getObject = async (
   }
 
   return out;
+};
+
+/**
+ * Fetch an object with mongo query
+ *
+ * WARNING: Only allow admins/trusted users to have unfiltered access this function. It may be possible to have
+ *          arbitrary code execution if care is not taken.
+ *
+ * @param requestUser
+ * @param objectTypeName
+ * @param query - { page?: number, size?: number, sortField?: string, sortCriteria?: 'asc' | 'desc', text?: string, filter?: any }
+ */
+export const getObjectV2 = async (
+  requestUser: IUser,
+  objectTypeName: string,
+  query: {
+    page?: string;
+    size?: string;
+    sortField?: string;
+    sortCriteria?: 'asc' | 'desc';
+    text?: string;
+    filter?: any;
+  },
+) => {
+  // Since this function can handle any model type, we must fetch the mongoose schema first
+  const objectModel: any = (getModels() as any)[objectTypeName];
+
+  if (objectModel === undefined) {
+    throw new BadRequestError('Invalid Object Type');
+  }
+
+  // Sanitize data before sending it out into the world
+  if (!query) {
+    throw new BadRequestError('Must specify query!');
+  }
+
+  // Default to page 1
+  if (query.page === undefined) {
+    query.page = '1';
+  }
+
+  // Default to a query size of 10k
+  if (query.size === undefined) {
+    query.size = '10000';
+  }
+
+  const page = query.page ? parseInt(query.page) : -1;
+  const size = query.size ? parseInt(query.size) : -1;
+
+  if (page <= 0 || !page) {
+    throw new BadRequestError('Page must be >= 1!');
+  }
+
+  if (size <= 0 || !size) {
+    throw new BadRequestError('Size must be >= 1!');
+  }
+
+  const filters: any = query.filter || {};
+  const and: { [k: string]: RegExp }[] = [];
+  const or: { [k: string]: RegExp }[] = [];
+
+  // Sort
+  const sort: any = {};
+
+  if (query.sortCriteria && !['asc', 'desc'].includes(query.sortCriteria)) {
+    throw new BadRequestError('Invalid sort criteria! Must be asc or desc!!');
+  }
+
+  if (query.sortField && query.sortCriteria) {
+    sort[query.sortField] = query.sortCriteria;
+  }
+
+  // In text search
+  const text = query.text;
+  if (text) {
+    const regex = new RegExp(escapeStringRegexp(text), 'i'); // filters regex chars, sets to case insensitive
+
+    const inTextSearchFields = getInTextSearchableFields(
+      objectModel.rawFields,
+      text,
+    );
+
+    // Apply regex against fields with in text search
+    for (const f of inTextSearchFields) {
+      const textQuery: any = {};
+
+      textQuery[f] = regex;
+
+      or.push(textQuery);
+    }
+  }
+
+  if (or && or.length) {
+    if ('$or' in filters) {
+      filters['$or'].concat(or);
+    } else {
+      filters['$or'] = or;
+    }
+  }
+
+  if (and && and.length) {
+    if ('$and' in filters) {
+      filters['$and'].concat(and);
+    } else {
+      filters['$and'] = and;
+    }
+  }
+
+  const results = await objectModel.mongoose
+    .find(filters)
+    .sort(sort)
+    .skip((page - 1) * size)
+    .limit(size);
+
+  const out: any[] = [];
+
+  const total =  objectModel.mongoose.countDocuments(filters);
+
+  const universeState = await fetchUniverseState();
+
+  // Perform all the traversals async
+  const cleanedResults = results.map((result: any) =>
+    cleanObject(objectModel.rawFields, result, {
+      requestUser: requestUser,
+      targetObject: result,
+      universeState: universeState,
+    }),
+  );
+
+  for (const cleanedResult of cleanedResults) {
+    // Only push it into the output if there is any data left
+    if (cleanedResult && Object.keys(cleanedResult).length > 0) {
+      out.push(cleanedResult);
+    }
+  }
+
+  return {total, out};
 };
 
 const validateObjectEdit = (

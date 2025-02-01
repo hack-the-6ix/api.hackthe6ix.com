@@ -6,6 +6,7 @@ import express, { Request, Response } from 'express';
 import { resumeExport } from '../services/dataexport';
 import assignAdmissionStatus from '../controller/applicationStatus/assignApplicationStatus';
 import getRanks from '../controller/applicationStatus/getRanks';
+import getRanksV2 from '../controller/applicationStatus/getRanksV2';
 import { createAPIToken } from '../controller/AuthController';
 import {
   getNextQueuedVerification,
@@ -392,6 +393,21 @@ actionRouter.get('/getRanks', isOrganizer, (req: Request, res: Response) => {
     req,
     res,
     getRanks(
+      req.query.usePersonalScore === 'true',
+    )
+  );
+});
+
+/**
+ * (Organizer)
+ *
+ * Get a list of applied users in descending order of computed score
+ */
+actionRouter.get('/getRanksV2', isOrganizer, (req: Request, res: Response) => {
+  logResponse(
+    req,
+    res,
+    getRanksV2(
       req.query.usePersonalScore === 'true',
     )
   );

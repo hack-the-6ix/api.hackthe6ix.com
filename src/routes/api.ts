@@ -15,6 +15,7 @@ import {
   deleteObject,
   editObject,
   getObject,
+  getObjectV2
 } from '../controller/ModelController';
 import { logRequest, logResponse } from '../services/logger';
 import { mongoose } from '../services/mongoose_service';
@@ -38,6 +39,23 @@ apiRouter.post(
       req,
       res,
       getObject(req.executor!, req.params.objectType, req.body),
+    );
+  },
+);
+
+/**
+ * (Organizer)
+ *
+ * VERSION 2: Get the result of a search query for any object type + returns total count
+ */
+apiRouter.post(
+  '/get/v2/:objectType',
+  isOrganizer,
+  (req: Request, res: Response) => {
+    logResponse(
+      req,
+      res,
+      getObjectV2(req.executor!, req.params.objectType, req.body),
     );
   },
 );
