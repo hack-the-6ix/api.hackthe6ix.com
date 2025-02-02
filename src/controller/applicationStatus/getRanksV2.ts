@@ -59,7 +59,7 @@ export default async (usePersonalApplicationScore?: boolean, page?: number, size
     }
   });
 
-  if (page && size) {ß
+  if (page && size) {
     const startIndex = (page - 1) * size;
     const endIndex = page * size;
 
