@@ -59,8 +59,7 @@ export default async (usePersonalApplicationScore?: boolean, page?: number, size
     }
   });
 
-  if (pagination) {
-    const { page = 1, size = 10 } = pagination;
+  if (page && size) {ß
     const startIndex = (page - 1) * size;
     const endIndex = page * size;
 
