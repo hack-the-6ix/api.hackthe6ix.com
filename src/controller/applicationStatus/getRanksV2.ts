@@ -2,18 +2,13 @@ import Team from '../../models/team/Team';
 import { IUser } from '../../models/user/fields';
 import User from '../../models/user/User';
 
-interface PagnitionOptions {
-  page?: number;
-  size?: number;
-}
-
 /**
  * Export a list of users who have applied in descending order by grade with pagination
  *
  * @param usePersonalApplicationScore - when true, users are sorted by their individual scores,
  *                                      without any adjustment from their team
  */
-export default async (usePersonalApplicationScore?: boolean, pagination?: PagnitionOptions) => {
+export default async (usePersonalApplicationScore?: boolean, page?: number, size?: number,) => {
   const sortCriteria = usePersonalApplicationScore
     ? 'computedApplicationScore'
     : 'computedFinalApplicationScore';
@@ -64,8 +59,7 @@ export default async (usePersonalApplicationScore?: boolean, pagination?: Pagnit
     }
   });
 
-  if (pagination) {
-    const { page = 1, size = 10 } = pagination;
+  if (page && size) {
     const startIndex = (page - 1) * size;
     const endIndex = page * size;
 
@@ -74,5 +68,8 @@ export default async (usePersonalApplicationScore?: boolean, pagination?: Pagnit
       users: sortedUsers.slice(startIndex, endIndex)
     };
   }
-  return sortedUsers;
+  return {
+    total: sortedUsers.length,
+    users: sortedUsers,
+  };
 }
