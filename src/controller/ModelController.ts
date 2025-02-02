@@ -334,7 +334,7 @@ export const getObjectV2 = async (
     }
   }
 
-  return {total, out};
+  return {total: total, users: out};
 };
 
 const validateObjectEdit = (
