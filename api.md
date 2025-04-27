@@ -5,6 +5,7 @@ Unless otherwise stated, request fields are (probably) optional.
 Also, pretend that the JSON is valid :) I left out some double quotes to make it a bit more cleaner.
 
 In general, APIs will respond in the following format:
+
 ```
 {
   status: <status code>,
@@ -15,14 +16,17 @@ In general, APIs will respond in the following format:
 ## API - General Object Operations
 
 ### POST - Get Object (Organizer)
+
 `/api/get/:objectType`
 
 Get the result of a search query for any object type. Queries are checked against `readCheck` policy.
 
 ##### Input Specification
+
 `objectType` refers to the name of the object being operated on (duh).
 
 The API requires the object type passed in as a query parameter. Additionally, a search query must be specified in the body of the request.
+
 ```
 {
   page: 1, // Required - 1 indexed page number to fetch
@@ -49,9 +53,11 @@ The API requires the object type passed in as a query parameter. Additionally, a
 ```
 
 ##### Output Specification
-The API will return an array of maps corresponding to the queried object. 
+
+The API will return an array of maps corresponding to the queried object.
 Note that the number of items returned may not match the limit specified in the query if some objects were
 filtered out as part of field sanitation.
+
 ```
 {
   status: 200,
@@ -66,9 +72,8 @@ filtered out as part of field sanitation.
 }
 ```
 
-
-
 ### POST - Edit Object (Organizer)
+
 `/api/edit/:objectType`
 
 Edit existing objects. Changes are validated against `writeCheck` policy.
@@ -77,8 +82,8 @@ WARNING! This is an **EXTREMELY** dangerous operation! If the query is incorrect
 Remember that `{}` means match **EVERYTHING**.
 
 ##### Input Specification
-`objectType` refers to the name of the object being operated on (duh).
 
+`objectType` refers to the name of the object being operated on (duh).
 
 ```
 {
@@ -106,6 +111,7 @@ Remember that `{}` means match **EVERYTHING**.
 ```
 
 ### POST - Delete Object (Admin)
+
 `/api/delete/:objectType`
 
 Delete existing objects. Changes are validated against `deleteCheck` policy.
@@ -114,6 +120,7 @@ WARNING! This is an **EXTREMELY** dangerous operation! If the query is incorrect
 Remember that `{}` means match **EVERYTHING**.
 
 ##### Input Specification
+
 `objectType` refers to the name of the object being operated on (duh).
 
 All objects that match the filter query will be deleted.
@@ -127,9 +134,9 @@ All objects that match the filter query will be deleted.
 ```
 
 ##### Output Specification
+
 WARNING! This is an **EXTREMELY** dangerous operation! If the query is incorrect, it could potentially nuke the database.
 Remember that `{}` means match **EVERYTHING**.
-
 
 ```
 {
@@ -143,11 +150,13 @@ Remember that `{}` means match **EVERYTHING**.
 ```
 
 ### POST - Create Object (Admin)
+
 `/api/create/:objectType`
 
 Create new object. Requests are validated against `createCheck` and `writeCheck` policy.
 
 ##### Input Specification
+
 `objectType` refers to the name of the object being operated on (duh).
 
 Note that all inputs will be validated using `writeCheck`.
@@ -170,6 +179,7 @@ Note that all inputs will be validated using `writeCheck`.
 ```
 
 ### POST - Initialize settings mapper (Admin)
+
 `/api/action/initializeSettingsMapper`
 
 Iterates through all documents and ensures the settingsMapper field is populated.
@@ -188,31 +198,38 @@ This endpoint should only be needed for migrating old databases.
 ```
 
 ### GET - Get file from GridFS (Organizer)
+
 `/api/gridfs?filename=<filename goes here>`
 
-Fetch a file stored in GridFS given its name. Note that it isn't guaranteed for files to have 
+Fetch a file stored in GridFS given its name. Note that it isn't guaranteed for files to have
 unique names if they are added to GridFS through methods other than `writeGridFSFile`.
 
 ##### Input Specification
-Specify the name of the file to be fetched as a query parameter. 
+
+Specify the name of the file to be fetched as a query parameter.
 
 ##### Output Specification
+
 The queried file will be returned if successful.
 
 ### PUT - Write file to GridFS (Organizer)
+
 `/api/gridfs?filename=<filename goes here>`
 
 Upload a file to GridFS with a specific file name. If a file exists with that name, delete it first.
 
 ##### Input Specification
+
 Specify the filename as a query parameter and submit the file to be uploaded with the name "file".
 
 For example, a file can be manually added by running:
+
 ```bash
 http --form put localhost:3005/api/gridfs?filename=thisisthefilename.pdf file@file.pdf x-access-token:$TOKEN
 ```
 
 ##### Output Specification
+
 ```
 {
     "message": "Success",
@@ -221,14 +238,17 @@ http --form put localhost:3005/api/gridfs?filename=thisisthefilename.pdf file@fi
 ```
 
 ### DELETE - Delete file from GridFS (Organizer)
+
 `/api/gridfs?filename=<filename goes here>`
 
 Delete a file from GridFS given its name if it exists.
 
 ##### Input Specification
+
 Specify the file to be deleted as a query parameter.
 
 ##### Output Specification
+
 ```
 {
     "message": "Success",
@@ -241,11 +261,13 @@ Error 404 will be returned if the file is not found.
 ## Action - Operations for specific object types
 
 ### GET - Get hacker profile (Hacker)
+
 `/api/action/profile`
 
 Get the sanitized user object corresponding to the requesting user.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -256,11 +278,13 @@ Get the sanitized user object corresponding to the requesting user.
 ```
 
 ### POST - Update Application (Hacker)
+
 `/api/action/updateapp`
 
 Update the hacker application
 
 #### Input Specification
+
 ```
 {
   submit: true, // Whether to mark the application for submission
@@ -271,14 +295,16 @@ Update the hacker application
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
-  message: "Success" 
+  message: "Success"
 }
 ```
 
 On failure:
+
 ```
 {
   status: 403,
@@ -287,24 +313,29 @@ On failure:
 ```
 
 ### PUT - Update Resume (Hacker)
+
 `/api/action/updateresume`
 
 #### Input Specification
+
 Send the resume file with the name field `resume` and magic will happen!
 
-
 ### GET - Get application enums (Hacker)
+
 `/api/action/applicationEnums`
 
 #### Output Specification
+
 Dictionary of fields with enums and an array of valid values.
 
 ### POST - Create Team
+
 `/api/action/createTeam`
 
 Create a new team and add the user to it.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -318,11 +349,13 @@ Create a new team and add the user to it.
 ```
 
 ### POST - Join Team
+
 `/api/action/joinTeam`
 
 Join an existing team if there is room.
 
 #### Input Specification
+
 ```
 {
   teamCode: "teamcodegoeshere"
@@ -330,6 +363,7 @@ Join an existing team if there is room.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -343,11 +377,13 @@ Join an existing team if there is room.
 ```
 
 ### POST - Leave Team
+
 `/api/action/leaveTeam`
 
 Remove the user from their team, and delete it if they were the last user.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -356,11 +392,13 @@ Remove the user from their team, and delete it if they were the last user.
 ```
 
 ### GET - Get Team
+
 `/api/action/getTeam`
 
 Get the user's current team
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -374,11 +412,13 @@ Get the user's current team
 ```
 
 ### GET - Get Application Settings
+
 `/api/action/applicationSettings`
 
 Returns the global settings object
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -389,11 +429,13 @@ Returns the global settings object
 ```
 
 ### POST - Generate Discord OAuth URL
+
 `/api/action/discordOAuthUrl`
 
 Returns a URL to begin the Discord OAuth process.
 
 #### Input Specification
+
 ```
 {
  redirectUrl: "<string>"
@@ -401,6 +443,7 @@ Returns a URL to begin the Discord OAuth process.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -409,11 +452,13 @@ Returns a URL to begin the Discord OAuth process.
 ```
 
 ### POST - Associate Discord
+
 `/api/action/discordOAuthUrl`
 
 Finishes the Discord OAuth process and associates the user, given a state and code.
 
 #### Input Specification
+
 ```
 {
  state: "<string>",
@@ -422,6 +467,7 @@ Finishes the Discord OAuth process and associates the user, given a state and co
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -429,15 +475,17 @@ Finishes the Discord OAuth process and associates the user, given a state and co
 }
 ```
 
-
 ### GET - Get statistics
+
 `/api/action/getStatistics?update=false`
 
 #### Input Specification
+
 Change `update` in the query string to `true` if the most up to date statistics are required immediately.
 This will also update the cache, which by default has a lifetime of 5 minutes.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -448,6 +496,7 @@ This will also update the cache, which by default has a lifetime of 5 minutes.
 ```
 
 ### POST - Sync Mailing Lists
+
 `/api/action/syncMailingLists`
 
 Trigger a mailing list sync with Mailtrain. If `forceUpdate` is enabled, all users
@@ -455,6 +504,7 @@ eligible for a mailing list will be sent to mailtrain, even if they are already 
 are updated too.
 
 #### Input Specification
+
 ```
 {
   mailingList: <array of name of mailing list to sync> (all if omitted),
@@ -464,6 +514,7 @@ are updated too.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -479,6 +530,7 @@ are updated too.
 ```
 
 ### POST - Verify Mailing List
+
 `/api/action/verifyMailingList`
 
 This will add a user to every registered mailing list with the (expected)
@@ -490,6 +542,7 @@ it does NOT verify that the query is correct.
 The request user's mail merge will be used for all of the test users.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -500,12 +553,14 @@ The request user's mail merge will be used for all of the test users.
 ```
 
 ### POST - Send a singular email
+
 `/api/action/sendEmail`
 
 Send an email to a user using the Mailtrain transactional API. If `email` corresponds to a user registered
 in the system, tags will automatically be injected with information such as application deadline, confirmation deadline, etc.
 
 #### Input Specification
+
 ```
 {
   email: <email of the recipient>
@@ -515,6 +570,7 @@ in the system, tags will automatically be injected with information such as appl
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -523,6 +579,7 @@ in the system, tags will automatically be injected with information such as appl
 ```
 
 ### POST - Send email template tests
+
 `/api/action/templateTest`
 
 Send the requester an instance of every available email template to ensure everything looks correct.
@@ -534,6 +591,7 @@ where `FIELD` is the name of the field it is replacing. Ensure that `FIELD` matc
 in that spot.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -544,11 +602,13 @@ in that spot.
 ```
 
 ### POST - Release Application Status
+
 `/api/action/releaseApplicationStatus`
 
 Set application released status to true for all users who have been either waitlisted, accepted, or rejected
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -559,17 +619,20 @@ Set application released status to true for all users who have been either waitl
 ```
 
 ### GET - Get ranks
+
 `/api/action/getRanks?usePersonalScore=<true | false>`
 
 Since application scores are a computed value, we cannot sort them in our query. Instead, we will
 have to use this dedicated endpoint to have it sorted manually.
 
 #### Input Specification
+
 `usePersonalScore` can be optionally passed in the query string to alter the metric used to order the users.
 By default, users are ordered by their `computedFinalApplicationScore`, which is the max of their personal
-score and their team's score. 
+score and their team's score.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -582,19 +645,21 @@ score and their team's score.
 ```
 
 ### POST - Assign Application Status
+
 `/api/action/assignApplicationStatus`
 
 Assign the application status to users using the grading algorithm. The top n applicants (where n is
 the maximum number of accepted users) are assigned the accepted role, and the next m applicants (where
-m is the maximum number of waitlisted users) are assigned the waitlisted role. All remaining users 
+m is the maximum number of waitlisted users) are assigned the waitlisted role. All remaining users
 who applied are rejected.
 
 **Warning**: Once this action has executed and people are accepted, their spots will be reserved until
-             it expires or it is manually revoked. Be very careful and ensure that everyone is graded
-             prior to running this!
+it expires or it is manually revoked. Be very careful and ensure that everyone is graded
+prior to running this!
 
 #### Input Specification
-`legit` can be used to indicate whether or not the changes will be 
+
+`legit` can be used to indicate whether or not the changes will be
 actually written to the database. If `legit` is not `true`, then it will essentially give a "preview"
 into what the list would look like.
 
@@ -613,6 +678,7 @@ By default, this will be the system waitlist accepted confirmation deadline.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -621,25 +687,27 @@ By default, this will be the system waitlist accepted confirmation deadline.
       // Users
     ],
     "waitlisted": [
-      // Users    
+      // Users
     ],
     "rejected": [
-      // Users    
+      // Users
     ],
     "dead": [
-      // Users    
+      // Users
     ]
   }
 }
 ```
 
 ### POST - Update RSVP
+
 `/api/action/rsvp`
 
 This endpoint is used to update a user's RSVP status. A user may only RSVP if they are accepted, not previously declined, and are in the RSVP period (whether global or personal).
 Once a user has declined, they cannot retract this decision.
 
 #### Input Specification
+
 ```
 {
   "attending": true // false if they are not attending... duh,
@@ -650,6 +718,7 @@ Once a user has declined, they cannot retract this decision.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -657,17 +726,19 @@ Once a user has declined, they cannot retract this decision.
 }
 ```
 
-
 ### GET - Get candidate (Organizer)
+
 `/api/action/getCandidate?category=<category goes here>`
 
 Fetch a random applicant that hasn't been graded yet.
 
 #### Input Specification
+
 `category` can be optionally specified as a query parameter to only return candidates
 who are ungraded in that category. If left blank, no category will be prioritized.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -678,12 +749,14 @@ who are ungraded in that category. If left blank, no category will be prioritize
 ```
 
 ### POST - Grade candidate (Organizer)
+
 `/api/action/gradeCandidate`
 
 Assign a grade to a user in a particular category. The submitted grades will override any existing
 ones and the dictionary will be merged (so omitted fields are unchanged).
 
 #### Input Specification
+
 ```
 {
   "candidateID": <id of user to grade>,
@@ -695,6 +768,7 @@ ones and the dictionary will be merged (so omitted fields are unchanged).
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -703,11 +777,13 @@ ones and the dictionary will be merged (so omitted fields are unchanged).
 ```
 
 ### POST - Verify a Discord user (Organizer)
+
 `/api/action/verifyDiscord`
 
 Attempt to associate a user with a given Discord account. Will fail if the user does not exist or is already bound to another Discord account.
 
 #### Input Specification
+
 ```
 {
   "email": <email of the user>,
@@ -717,6 +793,7 @@ Attempt to associate a user with a given Discord account. Will fail if the user 
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -734,22 +811,24 @@ Attempt to associate a user with a given Discord account. Will fail if the user 
 
 The user's Discord roles is taken from the user's permission roles as well as any in their `discord.additionalRoles` field.
 
-
 ### GET - Resume Export (Organizer)
+
 `/api/action/resumeExport`
 
 Returns a ZIP of all the resumes of users who were accepted or waitlisted and consented to their resume being shared.
 
 #### Output Specification
+
 Binary blob
 
-
 ### POST - Disassociate Discord (Organizer)
+
 `/api/action/disassociateDiscord`
 
 Disassociates a user from their associated Discord account.
 
 #### Input Specification
+
 ```
 {
  userID: "<userID>"
@@ -757,6 +836,7 @@ Disassociates a user from their associated Discord account.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -765,11 +845,13 @@ Disassociates a user from their associated Discord account.
 ```
 
 ### GET - Get user Discord Metadata (Organizer)
+
 `/api/action/disassociateDiscord`
 
 Returns the application's metadata that is stored by Discord.
 
 #### Input Specification
+
 ```
 {
  userID: "<userID>"
@@ -777,6 +859,7 @@ Returns the application's metadata that is stored by Discord.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -786,13 +869,14 @@ Returns the application's metadata that is stored by Discord.
 }
 ```
 
-
 ### GET - Get next queued Discord verification (Organizer)
+
 `/api/action/getNextQueuedDiscordVerification`
 
 Returns information about the next user that is in the Discord server verification queue. Note that this also removes the entry from the queue.
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -803,11 +887,13 @@ Returns information about the next user that is in the Discord server verificati
 ```
 
 ### POST - Requeue Discord verification (Organizer)
+
 `/api/action/requeueDiscordVerification`
 
 Requeue a Discord verification request.
 
 #### Input Specification
+
 ```
 {
   queuedVerificationID: "<queueVerificationID>",
@@ -816,6 +902,7 @@ Requeue a Discord verification request.
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -824,11 +911,13 @@ Requeue a Discord verification request.
 ```
 
 ### POST - Add Check In Notes (Organizer)
+
 `/api/action/addCheckInNotes`
 
 Adds the given check in notes to a user's check in notes. Returns all the user's new check in notes.
 
 #### Input Specification
+
 ```
 {
   userID: "<userID>",
@@ -837,6 +926,7 @@ Adds the given check in notes to a user's check in notes. Returns all the user's
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -844,13 +934,14 @@ Adds the given check in notes to a user's check in notes. Returns all the user's
 }
 ```
 
-
 ### POST - Remove Check In Notes (Organizer)
+
 `/api/action/removeCheckInNotes`
 
 Remove the given check in notes to a user's check in notes. Returns all the user's new check in notes.
 
 #### Input Specification
+
 ```
 {
   userID: "<userID>",
@@ -859,6 +950,7 @@ Remove the given check in notes to a user's check in notes. Returns all the user
 ```
 
 #### Output Specification
+
 ```
 {
   status: 200,
@@ -866,13 +958,14 @@ Remove the given check in notes to a user's check in notes. Returns all the user
 }
 ```
 
-
 ### GET - Check in QR Code
+
 `/api/action/checkInQR`
 
 Returns a data URI with the user's check in code.
 
 #### Output Specification
+
 ```
 {
   "status": 200,
@@ -881,6 +974,7 @@ Returns a data URI with the user's check in code.
 ```
 
 ### POST - Check in user (Volunteer)
+
 `/api/action/checkIN`
 
 Checks in a (External) User.
@@ -895,6 +989,7 @@ Checks in a (External) User.
 ```
 
 #### Output Specification
+
 ```
 {
   "status": 200,
@@ -903,6 +998,7 @@ Checks in a (External) User.
 ```
 
 ### POST - Generate check in QR codes for multiple (External) Users (Organizer)
+
 `/api/action/multiCheckInQR`
 
 Generates check in QR codes for multiple (external) users.
@@ -919,6 +1015,7 @@ Generates check in QR codes for multiple (external) users.
 ```
 
 #### Output Specification
+
 ```
 {
   "status": 200,
@@ -931,6 +1028,7 @@ Generates check in QR codes for multiple (external) users.
 ```
 
 ### POST - Create API Token (Admin)
+
 `/api/action/createAPIToken`
 
 Generates an API token that can be used to access the API programmatically.
@@ -945,6 +1043,7 @@ Generates an API token that can be used to access the API programmatically.
 ```
 
 #### Output Specification
+
 ```
 {
   "status": 200,
@@ -957,10 +1056,11 @@ Generates an API token that can be used to access the API programmatically.
 ## Auth - Authentication related operations
 
 ### POST - Starting point for login
+
 `/auth/:provider/login`
 
-
 ##### Input Specification
+
 `provider` refers to the name of the OpenID provider being operated on.
 
 ```
@@ -974,7 +1074,9 @@ Generates an API token that can be used to access the API programmatically.
 (e.g. `dash.hackthe6ix.com/callback`, will direct the user to the main app after getting the tokens)
 
 `redirectTo` is simply passed to the callback endpoint on the frontend. Generally it will be where the user is redirected to after the JWTs are retrieved and the session is started.
+
 ##### Output Specification
+
 ```
 {
   "status": 200,
@@ -987,10 +1089,11 @@ Generates an API token that can be used to access the API programmatically.
 The flow state will be set to a JSON string. The callback URL is stored in the `callbackURL` property and the redirect URL is stored in the `redirectTo` property.
 
 ### POST - Assert endpoint for when login completes
+
 `/auth/:provider/callback`
 
-
 ##### Input Specification
+
 `provider` refers to the name of the OpenID provider being operated on.
 
 ```
@@ -1001,6 +1104,7 @@ The flow state will be set to a JSON string. The callback URL is stored in the `
 ```
 
 ##### Output Specification
+
 ```
 {
   "status": 200,
@@ -1013,9 +1117,11 @@ The flow state will be set to a JSON string. The callback URL is stored in the `
 ```
 
 ### POST - Refresh Token
+
 `/auth/:provider/refresh`
 
 ##### Input Specification
+
 `provider` refers to the name of the OpenID provider being operated on.
 
 ```
@@ -1025,6 +1131,7 @@ The flow state will be set to a JSON string. The callback URL is stored in the `
 ```
 
 ##### Output Specification
+
 ```
 {
   status: 200,
@@ -1036,9 +1143,11 @@ The flow state will be set to a JSON string. The callback URL is stored in the `
 ```
 
 ### POST - Destroy the session
+
 `/auth/:provider/logout`
 
 ##### Input Specification
+
 `provider` refers to the name of the OpenID provider being operated on.
 
 ```
@@ -1048,8 +1157,134 @@ The flow state will be set to a JSON string. The callback URL is stored in the `
 ```
 
 ##### Output Specification
+
 ```
 {
   "status": 200
+}
+```
+
+## NFC - NFC Badge Operations
+
+### POST - Assign NFC to User
+
+`/nfc/assign`
+
+Assigns an NFC ID to a specific user.
+
+#### Input Specification
+
+```
+{
+  "nfcId": "<nfc identifier>",
+  "userId": "<user identifier>"
+}
+```
+
+#### Output Specification
+
+```
+{
+  "status": 200,
+  "message": "NFC assigned successfully"
+}
+```
+
+### GET - Get User ID from NFC ID
+
+`/nfc/getUserId/:nfcId`
+
+Retrieves a user ID associated with the given NFC ID.
+
+#### Output Specification
+
+```
+{
+  "status": 200,
+  "userId": "<user identifier>"
+}
+```
+
+### GET - Get User from NFC ID
+
+`/nfc/getUser/:nfcId`
+
+Retrieves the complete user object associated with the given NFC ID.
+
+#### Output Specification
+
+```
+{
+  "status": 200,
+  "user": {
+    // User object goes here
+  }
+}
+```
+
+### DELETE - Delete NFC Assignment by NFC ID
+
+`/nfc/deleteAssignmentByNfc/:nfcId`
+
+Removes the association between an NFC ID and user.
+
+#### Output Specification
+
+```
+{
+  "status": 200,
+  "message": "NFC assignment deleted successfully"
+}
+```
+
+### DELETE - Delete NFC Assignment by User ID
+
+`/nfc/deleteAssignmentByUser/:userId`
+
+Removes any NFC assignments for the specified user.
+
+#### Output Specification
+
+```
+{
+  "status": 200,
+  "message": "NFC assignment deleted successfully"
+}
+```
+
+### POST - Update Check-ins Using NFC
+
+`/nfc/updateCheckInsFromNFC`
+
+Updates specific check-in events for a user identified by NFC ID.
+
+#### Input Specification
+
+```
+{
+  "nfcId": "<nfc identifier>",
+  "checkInEvent": "<event name>",
+  "value": "<check-in value>"
+}
+```
+
+Valid check-in events (placeholder):
+
+- hackerCheckIn
+- lunchOne
+- dinnerOne
+- eventOne
+- snackOne
+- lunchTwo
+- dinnerTwo
+
+#### Output Specification
+
+```
+{
+  "status": 200,
+  "response": {
+    // Response details
+  }
 }
 ```
