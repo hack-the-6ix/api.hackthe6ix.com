@@ -22,7 +22,11 @@ import './services/mongoose_service';
 import { InternalServerError } from './types/errors';
 
 import { initializeBlobService } from './services/azureBlobStorage';
-initializeBlobService(process.env.AZURE_STORAGE_CONNECTION_STRING);
+if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
+  initializeBlobService(process.env.AZURE_STORAGE_CONNECTION_STRING);
+} else {
+  log.error('AZURE_STORAGE_CONNECTION_STRING is not set. Uploads will not work!');
+}
 
 const app = express();
 
