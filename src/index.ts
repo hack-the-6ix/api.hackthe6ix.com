@@ -21,6 +21,9 @@ import './services/mailer/util/verify_config';
 import './services/mongoose_service';
 import { InternalServerError } from './types/errors';
 
+import { initializeBlobService } from './services/azureBlobStorage';
+initializeBlobService(process.env.AZURE_STORAGE_CONNECTION_STRING);
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));

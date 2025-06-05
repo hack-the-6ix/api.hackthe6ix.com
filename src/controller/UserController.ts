@@ -39,6 +39,7 @@ import {
 } from "../services/discordApi";
 import {JsonWebTokenError, TokenExpiredError} from "jsonwebtoken";
 import {queueVerification} from "./DiscordController";
+import { getBlobDownloadUrl, writeBlob } from './AzureBlobStorageController';
 
 
 export const createFederatedUser = async (linkID: string, email: string, firstName: string, lastName: string, groupsList: string[], groupsHaveIDPPrefix = true): Promise<IUser> => {
@@ -196,7 +197,7 @@ export const updateResume = async (requestUser: IUser, expressFile: any, mongoos
 
   const filename = `${requestUser._id}-resume.pdf`;
 
-  await writeGridFSFile('resumes', filename, mongoose, expressFile);
+  await writeBlob('resumes', filename, expressFile.data);
 
   // Save new resume id to DB
   await User.findOneAndUpdate({
@@ -208,6 +209,26 @@ export const updateResume = async (requestUser: IUser, expressFile: any, mongoos
 
   return 'Success';
 };
+
+/**
+ * Return a signed URL to download the user's resume
+ * 
+ * @param requestUser
+ * @returns Resume URL
+ */
+export const getResumeURL = async (requestUser: IUser) => {
+  const user = await User.findOne({ _id: requestUser._id });
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  if (!user.hackerApplication.resumeFileName) {
+    throw new NotFoundError('User has no resume');
+  }
+
+  const resumeURL = await getBlobDownloadUrl('resumes', user.hackerApplication.resumeFileName);
+  return resumeURL;
+};  
 
 /**
  * Gets the valid enum values for the hacker application
