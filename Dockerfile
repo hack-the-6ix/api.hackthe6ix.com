@@ -1,4 +1,4 @@
-FROM node:16-alpine3.17 as builder
+FROM node:18-alpine3.21 as builder
 WORKDIR /build
 ENV NODE_ENV=production
 
@@ -8,7 +8,7 @@ RUN npm ci --include=dev
 RUN npm run build
 RUN npm prune
 
-FROM node:16-alpine3.17 as deploy
+FROM node:18-alpine3.21 as deploy
 WORKDIR /app
 ENV NODE_ENV=production
 ENV TZ=America/Toronto
