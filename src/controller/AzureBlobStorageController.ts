@@ -55,7 +55,7 @@ export const readBlob = async (containerName: SystemBlobContainer, blobName: str
  * @param blobName
  * @param expiresInMinutes
  */
-export const getBlobDownloadUrl = async (containerName: SystemBlobContainer, blobName: string, expiresInMinutes: number = 60): Promise<string> => {
+export const getBlobDownloadUrl = async (containerName: SystemBlobContainer, blobName: string, expiresInMinutes = 60): Promise<string> => {
   if (!blobName || blobName.length === 0) {
     throw new BadRequestError('Invalid blob name!');
   }
@@ -111,7 +111,7 @@ export const writeBlob = async (containerName: SystemBlobContainer, blobName: st
  * @param blobName
  * @param expiresInMinutes
  */
-export const getBlobUploadUrl = async (containerName: SystemBlobContainer, blobName: string, expiresInMinutes: number = 60): Promise<string> => {
+export const getBlobUploadUrl = async (containerName: SystemBlobContainer, blobName: string, expiresInMinutes = 60): Promise<string> => {
   if (!blobName || blobName.length === 0) {
     throw new BadRequestError('Invalid blob name!');
   }

@@ -18,7 +18,7 @@ export const decodeToken = (token: string): Record<string, any> => {
   return decode(token) as Record<string, any>;
 };
 
-export const createJwt = (data: Record<string, unknown>, expiresIn?: string): string => {
+export const createJwt = (data: Record<string, unknown>, expiresIn?: '1 day' | '15 minutes'): string => {
   return sign(data, process.env.JWT_SECRET!, {
     algorithm: 'HS256',
     expiresIn: expiresIn ?? '1 day',

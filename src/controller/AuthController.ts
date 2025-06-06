@@ -102,7 +102,7 @@ export const handleCallback = async (providerName: string, code: string, stateTe
       redirect_uri: state.callbackURL,
     });
 
-    const userData = await _getUserData(provider.userinfo_url, accesstoken.token.access_token);
+    const userData = await _getUserData(provider.userinfo_url, accesstoken.token.access_token as string);
 
     const localToken = await _issueLocalToken(userData);
 
@@ -125,7 +125,7 @@ export const handleCallback = async (providerName: string, code: string, stateTe
 
     return {
       token: localToken,
-      refreshToken: accesstoken.token.refresh_token,
+      refreshToken: accesstoken.token.refresh_token as string,
       redirectTo: redirectTo,
     };
   } catch (err: any) {

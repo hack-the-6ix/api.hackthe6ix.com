@@ -43,7 +43,7 @@ export async function ensureContainerExists(containerName: SystemBlobContainer):
 }
 
 // Generate a presigned URL for uploading
-export function generateUploadPresignedUrl(containerName: SystemBlobContainer, blobName: string, expiresInMinutes: number = 60): string {
+export function generateUploadPresignedUrl(containerName: SystemBlobContainer, blobName: string, expiresInMinutes = 60): string {
   if (!blobServiceClient) {
     throw new Error('Blob service client not initialized');
   }
@@ -71,7 +71,7 @@ export function generateUploadPresignedUrl(containerName: SystemBlobContainer, b
 }
 
 // Generate a presigned URL for downloading
-export function generateDownloadPresignedUrl(containerName: SystemBlobContainer, blobName: string, expiresInMinutes: number = 60): string {
+export function generateDownloadPresignedUrl(containerName: SystemBlobContainer, blobName: string, expiresInMinutes = 60): string {
   if (!blobServiceClient) {
     throw new Error('Blob service client not initialized');
   }
