@@ -1,102 +1,53 @@
 import User from '../../models/user/User';
 import { InternalServerError } from '../../types/errors';
 import {
-  addSubscriptionRequest,
-  deleteSubscriptionRequest,
+  addSubscriptionsRequest,
+  deleteSubscriptionsRequest,
   getMailingListSubscriptionsRequest,
-} from './util/external';
+} from './util/listmonk';
 
 /**
- * Syncs mailtrain mailing list with list of emails that should be enrolled at this instant
- *
- * NOTE: MAILTRAIN QUERIES ARE BY DEFAULT MAXED AT 10000! Things will probably break if we have
- *       more than this many subscribers.
+ * Syncs mailing list with list of subscriber IDs that should be enrolled at this instant
  *
  * @param mailingListID
- * @param emails - array of emails that should be in the mailing list. All other emails are removed.
- * @param forceUpdate - if true, updates will be pushed out to ALL users in emails, not just the ones that haven't been synced
- * @param email - If truthy, this email will correspond to the only one that is operated on
- *                We can use this to sync mailing lists for a single user without having to update thousands of other users
+ * @param subscriberIDs - array of subscriber IDs that should be in the mailing list. All others are removed.
  */
-export default async (mailingListID: string, emails: string[], forceUpdate?: boolean, email?: string) => {
-  const expctedAfterSubscribers = new Set(emails.filter(
-    (e: string) => e && (!email || e === email), // If email is specified then we will only operate on it
-  ));
+export default async (mailingListID: number, subscriberIDs: number[]) => {
+  // Step 1: Fetch a list of the current subscribers from the relevant mailing list
+  const currentSubscribers = await getMailingListSubscriptionsRequest(mailingListID);
 
-  // Step 1: Fetch a list of the current emails from the relevant mailing list
-  const currentEmailsResult = await getMailingListSubscriptionsRequest(mailingListID);
+  const currentSubscribersSet = new Set(currentSubscribers);
+  const targetSubscribersSet = new Set(subscriberIDs);
 
-  if (currentEmailsResult.status != 200 || !currentEmailsResult?.data?.data?.subscriptions) {
-    throw new InternalServerError('Unable to fetch existing subscribers');
-  }
-
-  const beforeSubscribers = new Set<string>(
-    currentEmailsResult?.data?.data?.subscriptions.map(
-      (x: any) => x.email,
-    ).filter(
-      (e: string) => e && (!email || e === email), // If email is specified then we will only operate on it
-    ),
-  );
-
-  // Step 2: Subscribe users that aren't on the list yet that should be
-  const toBeAdded = forceUpdate
-    ? [...expctedAfterSubscribers]
-    : [...expctedAfterSubscribers].filter(x => !beforeSubscribers.has(x) && x);
-
-  const subscribeNewResults = await Promise.all(toBeAdded.map(
-    async (userEmail: string) => {
-      const user = await User.findOne({ email: userEmail });
-
-      return addSubscriptionRequest(mailingListID, userEmail, user?.toJSON()?.mailmerge || {});
-    },
-  ));
-
-  for (const result of subscribeNewResults) {
-    if (result.status != 200 || !result.data) {
-      throw new InternalServerError('Unable to update subscriber');
-    }
-  }
+  // Step 2: Add users that aren't on the list yet that should be
+  const toBeAdded = subscriberIDs.filter((id: number) => !currentSubscribersSet.has(id));
 
   // Step 3: Delete users that are on the list that shouldn't be
-  const toBeDeleted = [...beforeSubscribers].filter(x => !expctedAfterSubscribers.has(x) && x);
+  const toBeDeleted = currentSubscribers.filter((id: number) => !targetSubscribersSet.has(id));
 
-  const deleteOldResults = await Promise.allSettled(toBeDeleted.map(
-    (userEmail: string) => deleteSubscriptionRequest(mailingListID, userEmail),
-  ));
+  // Step 4: Submit the new list of subscriber IDs
+  if (toBeAdded.length > 0) {
+    await addSubscriptionsRequest(mailingListID, toBeAdded);
+  }
+  if (toBeDeleted.length > 0) {
+    await deleteSubscriptionsRequest(mailingListID, toBeDeleted);
+  }
 
-  for (const result of deleteOldResults) {
-    if ((result.status === 'fulfilled' && !result.value) 
-      || (result.status === 'rejected' && result.reason != 'failed to fetch') ) {
-      throw new InternalServerError('Unable to delete subscriber');
+  // Step 5: Verify sync was successful by fetching all subscribers
+  const finalSubscribers = await getMailingListSubscriptionsRequest(mailingListID);
+
+  if (finalSubscribers.length !== subscriberIDs.length) {
+    // A simple length check
+    throw new InternalServerError('Mailing list sync failed: final count mismatch.');
+  }
+
+  const finalSubscribersSet = new Set(finalSubscribers);
+  for (const id of subscriberIDs) {
+    if (!finalSubscribersSet.has(id)) {
+      throw new InternalServerError(`Mailing list sync failed: subscriber ${id} not found in final list.`);
     }
   }
 
-  // Step 4: Verify sync was successful
-  const updatedEmailsResult = await getMailingListSubscriptionsRequest(mailingListID);
-
-  if (updatedEmailsResult.status != 200 || !updatedEmailsResult?.data?.data?.subscriptions) {
-    throw new InternalServerError('Unable to verify subscribers');
-  }
-
-  const updatedSubscribers = new Set<string>(
-    updatedEmailsResult?.data?.data?.subscriptions.map(
-      (x: any) => x.email,
-    ).filter(
-      (e: string) => e && (!email || e === email), // If email is specified then we will only operate on it
-    ),
-  );
-
-  // Verify length of mailing list
-  if (updatedSubscribers.size != expctedAfterSubscribers.size) {
-    throw new InternalServerError('Mismatch length between updated and target emails!');
-  }
-
-  // Verify all emails in list are valid
-  for (const email of expctedAfterSubscribers) {
-    if (!updatedSubscribers.has(email)) {
-      throw new InternalServerError('Mismatch between updated and target emails!');
-    }
-  }
-
+  // Return the subscriber IDs that were added and deleted
   return { added: toBeAdded, deleted: toBeDeleted };
 };

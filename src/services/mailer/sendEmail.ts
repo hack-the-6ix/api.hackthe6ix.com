@@ -1,24 +1,16 @@
 import { InternalServerError } from '../../types/errors';
-import { sendEmailRequest } from './util/external';
+import { sendEmailRequest } from './util/listmonk';
 
 /**
- * Sends a singular email using the Mailtrain transaction API
+ * Sends a singular email using the Listmonk transaction API
  *
- * @param recipientEmail - address to send the email to
- * @param templateID - Mailtrain ID of email template
- * @param subject - email subject
- * @param tags - data to be substituted into the email
+ * @param subscriberID - Listmonk subscriber ID
+ * @param templateID - Listmonk template ID
+ * @param additional_data - Additional data to be substituted into the email
  */
-export default async (recipientEmail: string, templateID: string, subject: string, tags?: { [key: string]: string }) => {
-  const parsedTags: any = {};
+export default async (subscriberID: number, templateID: number, additional_data?: { [key: string]: string }) => {
 
-  if(tags) {
-    for (const t of Object.keys(tags)) {
-      parsedTags[`TAGS[${t}]`] = tags[t];
-    }
-  }
-
-  const result = await sendEmailRequest(recipientEmail, templateID, subject, parsedTags);
+  const result = await sendEmailRequest(subscriberID, templateID, additional_data);
 
   if (result.status != 200 || !result.data) {
     throw new InternalServerError('Unable to send email');

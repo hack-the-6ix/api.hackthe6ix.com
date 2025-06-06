@@ -1,16 +1,13 @@
 import sendEmail from '../../services/mailer/sendEmail';
-import { sendEmailRequest } from '../../services/mailer/util/external';
+import { sendEmailRequest } from '../../services/mailer/util/listmonk';
 import { InternalServerError } from '../../types/errors';
 import {
-  hackerUser,
-  mockErrorResponse,
-  mockSuccessResponse,
   runAfterAll,
   runAfterEach,
   runBeforeAll,
   runBeforeEach,
 } from '../test-utils';
-import { mockSubject, mockTags, mockTagsParsed, mockTemplateID } from './test-utils';
+import { mockTags, mockTemplateID } from './test-utils';
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -29,61 +26,37 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../services/mailer/util/external', () => ({
-  addSubscriptionRequest: jest.fn(),
-  deleteSubscriptionRequest: jest.fn(),
-  getList: jest.fn(),
-  getMailingListSubscriptionsRequest: jest.fn(),
-  getTemplate: jest.fn(),
+jest.mock('../../services/mailer/util/listmonk', () => ({
   sendEmailRequest: jest.fn(),
 }));
 
-describe('Send raw email', () => {
-  describe('Success', () => {
-    test('Tags', async () => {
-      sendEmailRequest.mockReturnValue(mockSuccessResponse());
+describe('Send Email', () => {
+  beforeEach(() => {
+    (sendEmailRequest as jest.Mock).mockClear();
+  });
 
-      await sendEmail(
-        hackerUser.email,
-        mockTemplateID,
-        mockSubject,
-        mockTags,
-      );
+  test('Success', async () => {
+    (sendEmailRequest as jest.Mock).mockResolvedValue({ status: 200, data: { data: {} } });
 
-      expect(sendEmailRequest).toHaveBeenCalledWith(
-        hackerUser.email,
-        mockTemplateID,
-        mockSubject,
-        mockTagsParsed,
-      );
-    });
+    const subscriberID = 123;
+    await sendEmail(subscriberID, mockTemplateID, mockTags);
 
-    test('No Tags', async () => {
-      sendEmailRequest.mockReturnValue(mockSuccessResponse());
+    expect(sendEmailRequest).toHaveBeenCalledWith(subscriberID, mockTemplateID, mockTags);
+  });
 
-      await sendEmail(
-        hackerUser.email,
-        mockTemplateID,
-        mockSubject,
-      );
+  test('Success with no additional data', async () => {
+    (sendEmailRequest as jest.Mock).mockResolvedValue({ status: 200, data: { data: {} } });
 
-      expect(sendEmailRequest).toHaveBeenCalledWith(
-        hackerUser.email,
-        mockTemplateID,
-        mockSubject,
-        {},
-      );
-    });
+    const subscriberID = 123;
+    await sendEmail(subscriberID, mockTemplateID);
+
+    expect(sendEmailRequest).toHaveBeenCalledWith(subscriberID, mockTemplateID, undefined);
   });
 
   test('Fail', async () => {
-    sendEmailRequest.mockReturnValue(mockErrorResponse());
+    (sendEmailRequest as jest.Mock).mockResolvedValue({ status: 500 });
 
-    await expect(sendEmail(
-      hackerUser.email,
-      mockTemplateID,
-      mockSubject,
-      mockTags,
-    )).rejects.toThrow(InternalServerError);
+    const subscriberID = 123;
+    await expect(sendEmail(subscriberID, mockTemplateID, mockTags)).rejects.toThrow(InternalServerError);
   });
 });

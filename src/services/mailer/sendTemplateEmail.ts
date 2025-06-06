@@ -1,31 +1,20 @@
-import User from '../../models/user/User';
 import { MailTemplate } from '../../types/mailer';
 import sendEmail from './sendEmail';
-import { getTemplate } from './util/external';
+import { getTemplate } from './util/db';
 
 /**
- * Sends a singular email using the mailtrain transaction API. We use a user friendly template name to lookup the Mailtrain
- * templateID and subject.
+ * Sends a singular email using the Listmonk transaction API. We use a user friendly template name to lookup the templateID.
  *
- * @param email - address to send the email to
+ * @param subscriberID - Listmonk subscriber ID
  * @param templateName - internal template name of the email (we use this to fetch the templateID and subject)
- * @param tags - data to be substituted into the email (they take precedence over the automatically generated mailmerge fields)
+ * @param additional_data - Additional data to be substituted into the email
  */
-export default async (email: string, templateName: MailTemplate, tags?: { [key: string]: string }) => {
+export default async (subscriberID: number, templateName: MailTemplate, additional_data?: { [key: string]: string }) => {
   const template = await getTemplate(templateName);
 
-  const templateID: string = template.templateID;
-  const subject: string = template.subject;
+  const templateID = template.templateID;
 
-  // Go and fetch the user's email
-  const user = await User.findOne({
-    email: email,
-  });
-
-  await sendEmail(email, templateID, subject, {
-    ...(user?.toJSON()?.mailmerge || {}),
-    ...(tags || {}),
-  });
+  await sendEmail(subscriberID, templateID, additional_data);
 
   return 'Success';
 };

@@ -1,5 +1,6 @@
 import User from '../../models/user/User';
-import { addSubscriptionRequest, getList } from '../../services/mailer/util/external';
+import { addSubscriptionsRequest } from '../../services/mailer/util/listmonk';
+import { getList } from '../../services/mailer/util/db';
 import verifyMailingList from '../../services/mailer/verifyMailingList';
 import {
   organizerUser,
@@ -27,13 +28,12 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../services/mailer/util/external', () => ({
-  addSubscriptionRequest: jest.fn(),
-  deleteSubscriptionRequest: jest.fn(),
+jest.mock('../../services/mailer/util/listmonk', () => ({
+  addSubscriptionsRequest: jest.fn(),
+}));
+
+jest.mock('../../services/mailer/util/db', () => ({
   getList: jest.fn(),
-  getMailingListSubscriptionsRequest: jest.fn(),
-  getTemplate: jest.fn(),
-  sendEmailRequest: jest.fn(),
 }));
 
 jest.mock('../../types/mailer', () => {
@@ -44,17 +44,16 @@ jest.mock('../../types/mailer', () => {
 });
 
 test('Verify lists', async () => {
-  getList.mockImplementation((x: string) => (mockGetList as any)[x]);
+  (getList as jest.Mock).mockImplementation((x: string) => (mockGetList as any)[x]);
 
   const user = await User.create(organizerUser);
+  const subscriberID = 123;
 
-  const listNames = await verifyMailingList(user);
+  const listNames = await verifyMailingList(user, subscriberID);
 
-  const mailmerge = user.mailmerge;
-
-  expect(new Set(addSubscriptionRequest.mock.calls)).toEqual(new Set(
+  expect(new Set(addSubscriptionsRequest.mock.calls)).toEqual(new Set(
     Object.keys(mockMailingLists).map((list: string) => ([
-      mockGetList[list].listID, `${list}@localhost`, mailmerge,
+      mockGetList[list].listID, [subscriberID],
     ])),
   ));
 

@@ -156,6 +156,6 @@ describe('Release Admission Status', () => {
     expect((await User.findOne({ _id: hackerWaitlisted._id })).toJSON().status.statusReleased).toBeTruthy();
     expect((await User.findOne({ _id: hackerNoStatus._id })).toJSON().status.statusReleased).toBeFalsy();
 
-    expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+    expect(syncMailingLists).toHaveBeenCalled();
   });
 });

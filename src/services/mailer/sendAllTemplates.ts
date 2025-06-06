@@ -8,21 +8,15 @@ import sendTemplateEmail from './sendTemplateEmail';
  *
  * @param requestUser
  */
-export default async (requestUser: IUser) => {
+export default async (subscriberID: number, additional_data?: { [key: string]: string }) => {
   const templateNames: string[] = [];
-
-  const tags: any = {};
-
-  for (const k of Object.keys(requestUser.mailmerge)) {
-    tags[k] = `~${k} goes here~`;
-  }
 
   for (const template in MailTemplate) {
     templateNames.push(template);
     await sendTemplateEmail(
-      requestUser.email,
+      subscriberID,
       (MailTemplate as any)[template],
-      tags,
+      additional_data,
     );
   }
 

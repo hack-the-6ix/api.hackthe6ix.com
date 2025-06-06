@@ -1,8 +1,7 @@
 import { updateApplication } from '../../../controller/UserController';
-import { fetchUniverseState } from '../../../controller/util/resources';
 import User from '../../../models/user/User';
-import syncMailingLists from '../../../services/mailer/syncMailingLists';
-import { sendEmailRequest } from '../../../services/mailer/util/external';
+import syncUserMailingLists from '../../../services/mailer/syncUserMailingLists';
+import { sendEmailRequest } from '../../../services/mailer/util/listmonk';
 import { WriteCheckRequest } from '../../../types/checker';
 import {
   AlreadySubmittedError,
@@ -13,7 +12,6 @@ import {
   WriteDeniedError,
 } from '../../../types/errors';
 import { MailTemplate } from '../../../types/mailer';
-import { stringifyUnixTime } from '../../../util/date';
 import {
   generateMockUniverseState, getError,
   hackerUser,
@@ -43,14 +41,20 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../../services/mailer/util/external', () => {
-  const external = jest.requireActual('../../../services/mailer/util/external');
+jest.mock('../../../services/mailer/util/listmonk', () => {
+  const listmonk = jest.requireActual('../../../services/mailer/util/listmonk');
   return {
-    ...external,
+    ...listmonk,
     sendEmailRequest: jest.fn(() => mockSuccessResponse()),
-    getTemplate: (templateName: string) => mockGetMailTemplate(templateName),
   };
 });
+
+jest.mock('../../../services/mailer/syncUserMailingLists', () => jest.fn((): any => undefined));
+
+jest.mock('../../../services/mailer/util/db', () => ({
+  getList: jest.fn(() => mockSuccessResponse()),
+  getTemplate: jest.fn().mockImplementation(async (templateName: string) => mockGetMailTemplate(templateName)),
+}));
 
 jest.mock('../../../services/logger', () => {
   const real = jest.requireActual('../../../services/logger');
@@ -62,8 +66,6 @@ jest.mock('../../../services/logger', () => {
     },
   };
 });
-
-jest.mock('../../../services/mailer/syncMailingLists', () => jest.fn((): any => undefined));
 
 jest.mock('../../../models/user/fields', () => {
   const actualFields = jest.requireActual('../../../models/user/fields');
@@ -142,7 +144,7 @@ describe('Update Application', () => {
         } as any,
       );
 
-      expect(syncMailingLists).not.toHaveBeenCalled();
+      expect(syncUserMailingLists).not.toHaveBeenCalled();
     });
 
     test('Verify no email sent', async () => {
@@ -427,6 +429,7 @@ describe('Submit Application', () => {
         status: {
           applied: false,
         },
+        mailingListSubcriberID: 1,
       });
 
       await updateApplication(
@@ -439,24 +442,11 @@ describe('Submit Application', () => {
         } as any,
       );
 
-      const template = mockGetMailTemplate(MailTemplate.applied);
-      const universeState = await fetchUniverseState();
-
       expect(sendEmailRequest).toHaveBeenCalledWith(
-        user.email,
-        template.templateID,
-        template.subject,
-        expect.objectContaining({
-          'TAGS[FIRST_NAME]': user.firstName,
-          'TAGS[LAST_NAME]': user.lastName,
-          'TAGS[MERGE_APPLICATION_DEADLINE]': stringifyUnixTime(universeState.public.globalApplicationDeadline),
-          'TAGS[MERGE_CONFIRMATION_DEADLINE]': stringifyUnixTime(universeState.public.globalConfirmationDeadline),
-        }),
+        user.mailingListSubcriberID, mockGetMailTemplate(MailTemplate.applied).templateID, undefined,
       );
 
-      expect(syncMailingLists).toHaveBeenCalledWith(
-        undefined, true, user.email,
-      );
+      expect(syncUserMailingLists).toHaveBeenCalled();
     });
 
     test('Normal Deadline', async () => {

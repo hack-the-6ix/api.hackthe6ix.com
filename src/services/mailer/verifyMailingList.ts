@@ -1,6 +1,7 @@
 import { IUser } from '../../models/user/fields';
 import { MailingList } from '../../types/mailer';
-import { addSubscriptionRequest, getList } from './util/external';
+import { addSubscriptionsRequest } from './util/listmonk';
+import { getList } from './util/db';
 import DynamicCacheProvider from "../cache";
 
 const mailingListCache = new DynamicCacheProvider(async (list: string) => {
@@ -18,19 +19,15 @@ const mailingListCache = new DynamicCacheProvider(async (list: string) => {
  *
  * The request user's mail merge will be used for all of the test users.
  */
-export default async (requestUser: IUser) => {
+export default async (requestUser: IUser, subscriberID: number) => {
   const listNames: string[] = [];
-
-  // We'll use the requester's mail merge details with the mock emails
-  const mailmerge = requestUser.mailmerge;
 
   for (const list in MailingList) {
     const listConfig = await mailingListCache.get(list);
 
-    await addSubscriptionRequest(
+    await addSubscriptionsRequest(
       listConfig.listID,
-      `${list}@localhost`,
-      mailmerge,
+      [subscriberID],
     );
 
     listNames.push(list);

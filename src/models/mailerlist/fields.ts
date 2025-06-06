@@ -15,7 +15,7 @@ export const fields = {
             required: true
         },
         listID: {
-            type: String,
+            type: Number,
             required: true
         },
         query: {
@@ -30,7 +30,7 @@ export const fields = {
 
 export interface IMailerList extends mongoose.Document {
     name: string,
-    listID: string,
+    listID: number,
     query: Record<string, any>
     filterQuery?: Record<string, any>
 }

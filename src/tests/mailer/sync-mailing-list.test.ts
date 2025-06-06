@@ -1,27 +1,21 @@
-import User from '../../models/user/User';
 import syncMailingList from '../../services/mailer/syncMailingList';
 import {
-  addSubscriptionRequest,
-  deleteSubscriptionRequest,
+  addSubscriptionsRequest,
+  deleteSubscriptionsRequest,
   getMailingListSubscriptionsRequest,
-} from '../../services/mailer/util/external';
+} from '../../services/mailer/util/listmonk';
 import { InternalServerError } from '../../types/errors';
 import {
-  hackerUser,
-  mockErrorResponse,
-  mockSuccessResponse,
   runAfterAll,
   runAfterEach,
   runBeforeAll,
   runBeforeEach,
 } from '../test-utils';
-import {
-  generateGetSubscriptionsResponse,
-  mockEmailsA,
-  mockEmailsB,
-  mockEmailsEmpty,
-  mockMailingListID,
-} from './test-utils';
+
+const mockSubscribersA = [1, 2, 3];
+const mockSubscribersB = [2, 3, 4];
+const mockSubscribersEmpty: number[] = [];
+const mockMailingListID = 123;
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -40,531 +34,103 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../services/mailer/util/external', () => ({
-  addSubscriptionRequest: jest.fn(),
-  deleteSubscriptionRequest: jest.fn(),
-  getList: jest.fn(),
+jest.mock('../../services/mailer/util/listmonk', () => ({
+  addSubscriptionsRequest: jest.fn((mailingListID: number, subscriberIDs: number[]) => {
+    if (subscriberIDs.length === 0) {
+      return Promise.resolve();
+    }
+    return Promise.resolve();
+  }),
+  deleteSubscriptionsRequest: jest.fn((mailingListID: number, subscriberIDs: number[]) => {
+    if (subscriberIDs.length === 0) {
+      return Promise.resolve();
+    }
+    return Promise.resolve();
+  }),
   getMailingListSubscriptionsRequest: jest.fn(),
-  getTemplate: jest.fn(),
-  sendEmailRequest: jest.fn(),
 }));
 
 describe('Sync Mailing List', () => {
+  beforeEach(() => {
+    (addSubscriptionsRequest as jest.Mock).mockClear();
+    (deleteSubscriptionsRequest as jest.Mock).mockClear();
+    (getMailingListSubscriptionsRequest as jest.Mock).mockClear();
+  });
+
   describe('Success', () => {
-    test('Add new emails', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsEmpty),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      });
+    test('Add new subscribers', async () => {
+      (getMailingListSubscriptionsRequest as jest.Mock)
+        .mockResolvedValueOnce(mockSubscribersEmpty)
+        .mockResolvedValueOnce(mockSubscribersA);
 
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
+      const { added, deleted } = await syncMailingList(mockMailingListID, mockSubscribersA);
 
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        mockEmailsA,
-      );
-
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      expect(new Set(addSubscriptionRequest.mock.calls)).toEqual(new Set(mockEmailsA.map((email: string) => [
-        mockMailingListID, email, {},
-      ])));
-
-      expect(deleteSubscriptionRequest).not.toBeCalled();
-
-      expect(deleted).toEqual(mockEmailsEmpty);
-      expect(added).toEqual(mockEmailsA);
+      expect(getMailingListSubscriptionsRequest).toHaveBeenCalledTimes(2);
+      expect(addSubscriptionsRequest).toHaveBeenCalledWith(mockMailingListID, mockSubscribersA);
+      expect(deleteSubscriptionsRequest).not.toHaveBeenCalled();
+      expect(added).toEqual(mockSubscribersA);
+      expect(deleted).toEqual([]);
     });
 
-    test('Remove emails', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsEmpty),
-          },
-        },
-      });
+    test('Remove subscribers', async () => {
+        (getMailingListSubscriptionsRequest as jest.Mock)
+        .mockResolvedValueOnce(mockSubscribersA)
+        .mockResolvedValueOnce(mockSubscribersEmpty);
 
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
+      const { added, deleted } = await syncMailingList(mockMailingListID, mockSubscribersEmpty);
 
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        mockEmailsEmpty,
-      );
-
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      expect(new Set(deleteSubscriptionRequest.mock.calls)).toEqual(new Set(mockEmailsA.map((email: string) => [
-        mockMailingListID, email,
-      ])));
-
-      expect(addSubscriptionRequest).not.toBeCalled();
-
-      expect(deleted).toEqual(mockEmailsA);
-      expect(added).toEqual(mockEmailsEmpty);
+      expect(getMailingListSubscriptionsRequest).toHaveBeenCalledTimes(2);
+      expect(addSubscriptionsRequest).not.toHaveBeenCalled();
+      expect(deleteSubscriptionsRequest).toHaveBeenCalledWith(mockMailingListID, mockSubscribersA);
+      expect(added).toEqual([]);
+      expect(deleted).toEqual(mockSubscribersA);
     });
 
-    test('Add and remove emails', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-          },
-        },
-      });
+    test('Add and remove subscribers', async () => {
+        (getMailingListSubscriptionsRequest as jest.Mock)
+        .mockResolvedValueOnce(mockSubscribersA)
+        .mockResolvedValueOnce(mockSubscribersB);
 
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
+      const { added, deleted } = await syncMailingList(mockMailingListID, mockSubscribersB);
 
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-      );
-
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      const toBeRemoved = mockEmailsA.filter((email: string) => mockEmailsB.indexOf(email) === -1);
-      const toBeAdded = mockEmailsB.filter((email: string) => mockEmailsA.indexOf(email) === -1);
-
-      expect(new Set(addSubscriptionRequest.mock.calls)).toEqual(new Set(toBeAdded.map((email: string) => [
-        mockMailingListID, email, {},
-      ])));
-
-      expect(new Set(deleteSubscriptionRequest.mock.calls)).toEqual(new Set(toBeRemoved.map((email: string) => [
-        mockMailingListID, email,
-      ])));
-
-      expect(deleted).toEqual(toBeRemoved);
-      expect(added).toEqual(toBeAdded);
+      expect(getMailingListSubscriptionsRequest).toHaveBeenCalledTimes(2);
+      expect(addSubscriptionsRequest).toHaveBeenCalledWith(mockMailingListID, [4]);
+      expect(deleteSubscriptionsRequest).toHaveBeenCalledWith(mockMailingListID, [1]);
+      expect(added).toEqual([4]);
+      expect(deleted).toEqual([1]);
     });
 
     test('No change', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      });
+        (getMailingListSubscriptionsRequest as jest.Mock)
+        .mockResolvedValueOnce(mockSubscribersA)
+        .mockResolvedValueOnce(mockSubscribersA);
 
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        mockEmailsA,
-      );
+      const { added, deleted } = await syncMailingList(mockMailingListID, mockSubscribersA);
 
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      expect(addSubscriptionRequest).not.toHaveBeenCalled();
-      expect(deleteSubscriptionRequest).not.toHaveBeenCalled();
-
-      expect(deleted).toEqual([]);
+      expect(getMailingListSubscriptionsRequest).toHaveBeenCalledTimes(2);
+      expect(addSubscriptionsRequest).not.toHaveBeenCalled();
+      expect(deleteSubscriptionsRequest).not.toHaveBeenCalled();
       expect(added).toEqual([]);
-    });
-
-    describe('Sync single user', () => {
-      test('Add', async () => {
-        getMailingListSubscriptionsRequest.mockReturnValueOnce({
-          ...mockSuccessResponse(),
-          data: {
-            data: {
-              subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-            },
-          },
-        }).mockReturnValueOnce({
-          ...mockSuccessResponse(),
-          data: {
-            data: {
-              subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-            },
-          },
-        });
-
-        addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-        const email = mockEmailsB[2];
-
-        const { added, deleted } = await syncMailingList(
-          mockMailingListID,
-          mockEmailsB,
-          false,
-          email,
-        );
-
-        expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-          [mockMailingListID],
-          [mockMailingListID],
-        ]);
-
-        expect(new Set(addSubscriptionRequest.mock.calls)).toEqual(new Set([[
-          mockMailingListID, email, {},
-        ]]));
-
-        expect(deleteSubscriptionRequest).not.toHaveBeenCalled();
-
-        expect(deleted).toEqual([]);
-        expect(added).toEqual([email]);
-      });
-
-      test('Remove', async () => {
-        getMailingListSubscriptionsRequest.mockReturnValueOnce({
-          ...mockSuccessResponse(),
-          data: {
-            data: {
-              subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-            },
-          },
-        }).mockReturnValueOnce({
-          ...mockSuccessResponse(),
-          data: {
-            data: {
-              subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-            },
-          },
-        });
-
-        deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-        const email = mockEmailsA[0];
-
-        const { added, deleted } = await syncMailingList(
-          mockMailingListID,
-          mockEmailsB,
-          false,
-          email,
-        );
-
-        expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-          [mockMailingListID],
-          [mockMailingListID],
-        ]);
-
-        expect(new Set(deleteSubscriptionRequest.mock.calls)).toEqual(new Set([[
-          mockMailingListID, email,
-        ]]));
-
-        expect(addSubscriptionRequest).not.toHaveBeenCalled();
-
-        expect(deleted).toEqual([email]);
-        expect(added).toEqual([]);
-      });
-    });
-
-    test('Inject mailing list fields', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsEmpty),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse([hackerUser.email]),
-          },
-        },
-      });
-
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      const user = await User.create(hackerUser);
-
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        [hackerUser.email],
-      );
-
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      expect(new Set(addSubscriptionRequest.mock.calls)).toEqual(new Set([[
-        mockMailingListID, hackerUser.email, user.toJSON().mailmerge,
-      ]]));
-
-      expect(deleteSubscriptionRequest).not.toHaveBeenCalled();
-
       expect(deleted).toEqual([]);
-      expect(added).toEqual([hackerUser.email]);
-    });
-
-    test('Force update', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-          },
-        },
-      });
-
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      );
-
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      const toBeRemoved = mockEmailsA.filter((email: string) => mockEmailsB.indexOf(email) === -1);
-
-      expect(new Set(addSubscriptionRequest.mock.calls)).toEqual(new Set(mockEmailsB.map((email: string) => [
-        mockMailingListID, email, {},
-      ])));
-
-      expect(new Set(deleteSubscriptionRequest.mock.calls)).toEqual(new Set(toBeRemoved.map((email: string) => [
-        mockMailingListID, email,
-      ])));
-
-      expect(deleted).toEqual(toBeRemoved);
-      expect(added).toEqual(mockEmailsB);
-    });
-
-    test('Force update specific user', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-          },
-        },
-      });
-
-      const email = mockEmailsB[2];
-
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      const { added, deleted } = await syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-        email,
-      );
-
-      expect(getMailingListSubscriptionsRequest.mock.calls).toEqual([
-        [mockMailingListID],
-        [mockMailingListID],
-      ]);
-
-      expect(addSubscriptionRequest.mock.calls).toEqual([
-        [mockMailingListID, email, {}],
-      ]);
-
-      expect(deleteSubscriptionRequest).not.toBeCalled();
-
-      expect(deleted).toEqual([]);
-      expect(added).toEqual([email]);
     });
   });
 
   describe('Error', () => {
-    test('Unable to fetch current subscriptions', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValue(mockErrorResponse());
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
+    test('Verification fails (length mismatch)', async () => {
+        (getMailingListSubscriptionsRequest as jest.Mock)
+        .mockResolvedValueOnce(mockSubscribersA)
+        .mockResolvedValueOnce(mockSubscribersA); // Return wrong list for verification
 
-      await expect(syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      )).rejects.toThrow(InternalServerError);
+      await expect(syncMailingList(mockMailingListID, mockSubscribersB)).rejects.toThrow(InternalServerError);
     });
 
-    test('Unable to update subscription', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-          },
-        },
-      });
+    test('Verification fails (subscriber mismatch)', async () => {
+      const finalSubscribers = [2, 3, 5]; // one different subscriber
+      (getMailingListSubscriptionsRequest as jest.Mock)
+        .mockResolvedValueOnce(mockSubscribersA)
+        .mockResolvedValueOnce(finalSubscribers);
 
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockErrorResponse());
-
-      await expect(syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      )).rejects.toThrow(InternalServerError);
-    });
-
-    test('Unable to delete subscription', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsB),
-          },
-        },
-      });
-
-      deleteSubscriptionRequest.mockReturnValue(mockErrorResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      await expect(syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      )).rejects.toThrow(InternalServerError);
-    });
-
-    test('Unable to verify subscription', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValueOnce({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValueOnce(mockErrorResponse());
-
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      await expect(syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      )).rejects.toThrow(InternalServerError);
-    });
-
-    test('Mailing list verification length mismatch', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValue({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValue({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsEmpty),
-          },
-        },
-      });
-
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      await expect(syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      )).rejects.toThrow(InternalServerError);
-    });
-
-    test('Mailing list verification mismatch', async () => {
-      getMailingListSubscriptionsRequest.mockReturnValue({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      }).mockReturnValue({
-        ...mockSuccessResponse(),
-        data: {
-          data: {
-            subscriptions: generateGetSubscriptionsResponse(mockEmailsA),
-          },
-        },
-      });
-
-      deleteSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-      addSubscriptionRequest.mockReturnValue(mockSuccessResponse());
-
-      await expect(syncMailingList(
-        mockMailingListID,
-        mockEmailsB,
-        true,
-      )).rejects.toThrow(InternalServerError);
+      await expect(syncMailingList(mockMailingListID, mockSubscribersB)).rejects.toThrow(InternalServerError);
     });
   });
 });

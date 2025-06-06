@@ -33,19 +33,24 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../../services/mailer/util/external', () => {
-  const external = jest.requireActual('../../../services/mailer/util/external');
+jest.mock('../../../services/mailer/util/listmonk', () => {
+  const listmonk = jest.requireActual('../../../services/mailer/util/listmonk');
   return {
-    ...external,
+    ...listmonk,
     sendEmailRequest: jest.fn(() => mockSuccessResponse()),
-    getList: jest.fn(() => mockSuccessResponse()),
-    getTemplate: (templateName: string) => mockGetMailTemplate(templateName),
   };
 });
+
+jest.mock('../../../services/mailer/util/db', () => ({
+  getList: jest.fn(() => mockSuccessResponse()),
+  getTemplate: (templateName: string) => mockGetMailTemplate(templateName),
+}));
 
 jest.mock('../../../services/mailer/syncMailingList', () =>
   jest.fn((): any => undefined),
 );
+
+jest.mock('../../../services/mailer/syncUserMailingLists', () => jest.fn((): any => undefined));
 
 jest.mock('../../../services/logger', () => {
   const real = jest.requireActual('../../../services/logger');
