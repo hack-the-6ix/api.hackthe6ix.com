@@ -1,6 +1,6 @@
 import { rsvp } from '../../../controller/UserController';
 import User from '../../../models/user/User';
-import { sendEmailRequest } from '../../../services/mailer/util/external';
+import { sendEmailRequest } from '../../../services/mailer/util/listmonk';
 import { DeadlineExpiredError, RSVPRejectedError } from '../../../types/errors';
 import { MailTemplate } from '../../../types/mailer';
 import {
@@ -32,17 +32,21 @@ beforeEach(runBeforeEach);
 afterAll(runAfterAll);
 
 
-jest.mock('../../../services/mailer/util/external', () => {
-  const external = jest.requireActual('../../../services/mailer/util/external');
+jest.mock('../../../services/mailer/util/listmonk', () => {
+  const listmonk = jest.requireActual('../../../services/mailer/util/listmonk');
   return {
-    ...external,
+    ...listmonk,
     sendEmailRequest: jest.fn(() => mockSuccessResponse()),
-    getList: jest.fn(() => mockSuccessResponse()),
-    getTemplate: (templateName: string) => mockGetMailTemplate(templateName),
   };
 });
 
+jest.mock('../../../services/mailer/util/db', () => ({
+  getList: jest.fn(() => mockSuccessResponse()),
+  getTemplate: jest.fn().mockImplementation(async (templateName: string) => mockGetMailTemplate(templateName)),
+}));
+
 jest.mock('../../../services/mailer/syncMailingList', () => jest.fn((): any => undefined));
+jest.mock('../../../services/mailer/syncUserMailingLists', () => jest.fn((): any => undefined));
 
 describe('RSVP', () => {
   describe('Deadlines', () => {
@@ -260,6 +264,7 @@ describe('RSVP', () => {
           accepted: true,
           statusReleased: true,
         },
+        mailingListSubcriberID: 1,
       });
 
       await rsvp(
@@ -278,16 +283,8 @@ describe('RSVP', () => {
       expect(resultObject.toJSON().status.declined).toEqual(false);
 
       // Verify confirmation email sent
-      const template = mockGetMailTemplate(MailTemplate.confirmed);
-
       expect(sendEmailRequest).toHaveBeenCalledWith(
-        user.email,
-        template.templateID,
-        template.subject,
-        expect.objectContaining({
-          'TAGS[FIRST_NAME]': user.firstName,
-          'TAGS[LAST_NAME]': user.lastName,
-        }),
+        1, mockGetMailTemplate(MailTemplate.confirmed).templateID, undefined
       );
     });
 
@@ -300,6 +297,7 @@ describe('RSVP', () => {
           accepted: true,
           statusReleased: true,
         },
+        mailingListSubcriberID: 1,
       });
 
       await rsvp(
@@ -318,16 +316,8 @@ describe('RSVP', () => {
       expect(resultObject.toJSON().status.declined).toEqual(true);
 
       // Verify confirmation email sent
-      const template = mockGetMailTemplate(MailTemplate.declined);
-
       expect(sendEmailRequest).toHaveBeenCalledWith(
-        user.email,
-        template.templateID,
-        template.subject,
-        expect.objectContaining({
-          'TAGS[FIRST_NAME]': user.firstName,
-          'TAGS[LAST_NAME]': user.lastName,
-        }),
+        1, mockGetMailTemplate(MailTemplate.declined).templateID, undefined
       );
     });
   });
@@ -342,6 +332,7 @@ describe('RSVP', () => {
           accepted: true,
           statusReleased: true,
         },
+        mailingListSubcriberID: 1,
       });
 
       await rsvp(
@@ -365,16 +356,8 @@ describe('RSVP', () => {
       )
 
       // Verify confirmation email sent
-      const template = mockGetMailTemplate(MailTemplate.confirmed);
-
       expect(sendEmailRequest).toHaveBeenCalledWith(
-          user.email,
-          template.templateID,
-          template.subject,
-          expect.objectContaining({
-            'TAGS[FIRST_NAME]': user.firstName,
-            'TAGS[LAST_NAME]': user.lastName,
-          }),
+          1, mockGetMailTemplate(MailTemplate.confirmed).templateID, undefined
       );
     })
   })

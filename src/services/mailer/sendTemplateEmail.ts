@@ -12,9 +12,9 @@ import { getTemplate } from './util/db';
 export default async (subscriberID: number, templateName: MailTemplate, additional_data?: { [key: string]: string }) => {
   const template = await getTemplate(templateName);
 
-  const templateID: string = template.templateID;
+  const templateID = template.templateID;
 
-  await sendEmail(subscriberID, parseInt(templateID), additional_data);
+  await sendEmail(subscriberID, templateID, additional_data);
 
   return 'Success';
 };

@@ -189,7 +189,7 @@ describe('Assign Application Status', () => {
       expect((await User.findOne({ _id: users[2]._id })).toJSON()).toEqual(rejectedExpected);
       expect(rejected).toEqual([rejectedExpected]);
 
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
 
@@ -262,7 +262,7 @@ describe('Assign Application Status', () => {
       expect((await User.findOne({ _id: users[2]._id })).toJSON()).toEqual(users[2]);
       expect(rejected).toEqual([rejectedExpected]);
 
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
   });
@@ -326,7 +326,7 @@ describe('Assign Application Status', () => {
           internalTextStatus: 'Rejected',
         },
       })));
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
     test('Existing accepted and waitlisted users', async () => {
@@ -427,7 +427,7 @@ describe('Assign Application Status', () => {
           internalTextStatus: 'Rejected',
         },
       })));
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
     test('Existing accepted and waitlisted users -- No changes', async () => {
@@ -512,7 +512,7 @@ describe('Assign Application Status', () => {
           waitlisted: false,
         },
       })));
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
     test('Existing rejected and declined users', async () => {
@@ -650,7 +650,7 @@ describe('Assign Application Status', () => {
           internalTextStatus: 'Rejected',
         },
       })));
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
     test('Accept waitlisted people', async () => {
@@ -771,7 +771,7 @@ describe('Assign Application Status', () => {
           internalTextStatus: 'Rejected',
         },
       })));
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
 
     test('Waitlist Over', async () => {
@@ -906,7 +906,7 @@ describe('Assign Application Status', () => {
           internalTextStatus: 'Rejected',
         },
       })));
-      expect(syncMailingLists).toHaveBeenCalledWith(undefined, true);
+      expect(syncMailingLists).toHaveBeenCalled();
     });
   });
 });

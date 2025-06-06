@@ -23,7 +23,7 @@ export default async (user: IUser) => {
 
     for (const list of mailingLists) {
         const listConfig = await mailingListCache.get(list);
-        allManagedListIds.push(parseInt(listConfig.listID));
+        allManagedListIds.push(listConfig.listID);
 
         const filterQuery = {
             ...listConfig?.query || {},
@@ -31,7 +31,7 @@ export default async (user: IUser) => {
         };
 
         if (userInList(user, filterQuery)) {
-            expectedLists.push(parseInt(listConfig.listID));
+            expectedLists.push(listConfig.listID);
         }
     }
 

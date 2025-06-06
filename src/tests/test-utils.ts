@@ -6,6 +6,7 @@ import { extractFields } from '../models/util';
 import * as dbHandler from './db-handler';
 import * as MockDate from "mockdate";
 import {NoErrorThrownError} from "../types/errors";
+import {MailTemplate} from "../types/mailer";
 
 export const adminUser = {
   _id: new ObjectId('5f081f878c60690dd9b9fd50'),
@@ -170,10 +171,26 @@ export const mockDate = (timestamp: number) => {
   return () => MockDate.reset()
 };
 
-export const mockGetMailTemplate = (templateName: string) => ({
-  subject: `subject${templateName}`,
-  templateID: `ID${templateName}`,
-});
+export const mockGetMailTemplate = (templateName: string) => {
+  let id;
+  switch (templateName) {
+    case MailTemplate.applied:
+      id = 1;
+      break;
+    case MailTemplate.confirmed:
+      id = 2;
+      break;
+    case MailTemplate.declined:
+      id = 3;
+      break;
+    default:
+      id = 99;
+  }
+  return {
+    subject: `subject${templateName}`,
+    templateID: id,
+  };
+};
 
 export const mockSuccessResponse = () => ({ status: 200, data: {} as any });
 export const mockErrorResponse = () => ({ status: 500, data: {} as any });

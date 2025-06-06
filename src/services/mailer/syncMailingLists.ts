@@ -51,7 +51,7 @@ export default async (inputMailingLists?: string[]) => {
     
 
     await syncMailingList(
-      listConfig?.listID || '',
+      listConfig?.listID!,
       subscriberIDs
     );
   }

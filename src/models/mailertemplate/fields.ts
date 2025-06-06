@@ -14,12 +14,8 @@ export const fields = {
             index: true,
             required: true
         },
-        subject: {
-            type: String,
-            required: true
-        },
         templateID: {
-            type: String,
+            type: Number,
             required: true
         }
     }
@@ -27,6 +23,5 @@ export const fields = {
 
 export interface IMailerTemplate extends mongoose.Document {
     name: string,
-    subject: string,
-    templateID: string
+    templateID: number
 }

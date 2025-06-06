@@ -12,7 +12,7 @@ import {
  * @param mailingListID
  * @param subscriberIDs - array of subscriber IDs that should be in the mailing list. All others are removed.
  */
-export default async (mailingListID: string, subscriberIDs: number[]) => {
+export default async (mailingListID: number, subscriberIDs: number[]) => {
   // Step 1: Fetch a list of the current subscribers from the relevant mailing list
   const currentSubscribers = await getMailingListSubscriptionsRequest(mailingListID);
 

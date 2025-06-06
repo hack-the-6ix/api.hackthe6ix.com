@@ -35,7 +35,7 @@ export const sendEmailRequest = async (subscriberID: number, templateID: number,
   })
 };
 
-export const getMailingListSubscriptionsRequest = async (mailingListID: string) => {
+export const getMailingListSubscriptionsRequest = async (mailingListID: number) => {
   if (process.env.NODE_ENV === 'development') {
     // return mockGetSubscriptions(mailingListID);
   }
