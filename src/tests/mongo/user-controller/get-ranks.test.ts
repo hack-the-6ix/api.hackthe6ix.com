@@ -34,7 +34,7 @@ jest.mock('../../../models/user/computeApplicationScore', () => jest.fn((): any 
 
 const createUsers = async (num: number, lastUpdated?: number[]) => {
 
-  let out: IUser[] = [];
+  const out: IUser[] = [];
 
   for (let i = 0; i < num; i++) {
     out.push(await User.create({

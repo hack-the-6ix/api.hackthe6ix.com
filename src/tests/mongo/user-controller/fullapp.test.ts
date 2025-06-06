@@ -321,7 +321,7 @@ describe('Submit Real Application', () => {
 
   test('Mandatory Fields', async () => {
     const mockTS = 696969;
-    let restoreDateMock = mockDate(mockTS);
+    const restoreDateMock = mockDate(mockTS);
 
     await generateMockUniverseState();
 

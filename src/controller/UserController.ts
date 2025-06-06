@@ -1,4 +1,3 @@
-import {Mongoose} from 'mongoose';
 import * as qrcode from 'qrcode';
 import { enumOptions } from '../models/user/enums';
 import {fields, IPartialApplication, IUser} from '../models/user/fields';
@@ -23,7 +22,6 @@ import {
   QRCodeGenerateBulkResponse,
   QRCodeGenerateRequest
 } from '../types/types';
-import { writeGridFSFile } from './GridFSController';
 import { editObject, getObject } from './ModelController';
 import { testCanUpdateApplication, validateSubmission } from './util/checker';
 import { fetchUniverseState, getModels } from './util/resources';
@@ -39,6 +37,7 @@ import {
 } from "../services/discordApi";
 import {JsonWebTokenError, TokenExpiredError} from "jsonwebtoken";
 import {queueVerification} from "./DiscordController";
+import { getBlobDownloadUrl, writeBlob } from './AzureBlobStorageController';
 
 
 export const createFederatedUser = async (linkID: string, email: string, firstName: string, lastName: string, groupsList: string[], groupsHaveIDPPrefix = true): Promise<IUser> => {
@@ -169,13 +168,10 @@ export const updateApplication = async (requestUser: IUser, submit: boolean, hac
 /**
  * Update resume on file. Only pdf files under 5MB will be allowed.
  *
- * Reference: https://stackoverflow.com/questions/16482233/store-file-in-mongos-gridfs-with-expressjs-after-upload
- *
  * @param requestUser
  * @param expressFile - express fileupload file object
- * @param mongoose - instance of mongoose to extract connection from
  */
-export const updateResume = async (requestUser: IUser, expressFile: any, mongoose: Mongoose) => {
+export const updateResume = async (requestUser: IUser, expressFile: any) => {
   if (!expressFile) {
     throw new BadRequestError('Invalid file');
   }
@@ -196,7 +192,7 @@ export const updateResume = async (requestUser: IUser, expressFile: any, mongoos
 
   const filename = `${requestUser._id}-resume.pdf`;
 
-  await writeGridFSFile('resumes', filename, mongoose, expressFile);
+  await writeBlob('resumes', filename, expressFile.data);
 
   // Save new resume id to DB
   await User.findOneAndUpdate({
@@ -208,6 +204,26 @@ export const updateResume = async (requestUser: IUser, expressFile: any, mongoos
 
   return 'Success';
 };
+
+/**
+ * Return a signed URL to download the user's resume
+ * 
+ * @param requestUser
+ * @returns Resume URL
+ */
+export const getResumeURL = async (requestUser: IUser) => {
+  const user = await User.findOne({ _id: requestUser._id });
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  if (!user.hackerApplication.resumeFileName) {
+    throw new NotFoundError('User has no resume');
+  }
+
+  const resumeURL = await getBlobDownloadUrl('resumes', user.hackerApplication.resumeFileName);
+  return resumeURL;
+};  
 
 /**
  * Gets the valid enum values for the hacker application

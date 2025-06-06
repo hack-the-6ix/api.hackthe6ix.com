@@ -6,10 +6,12 @@
 
 import express, { Request, Response } from 'express';
 import {
-  deleteGridFSFile,
-  readGridFSFile,
-  writeGridFSFile,
-} from '../controller/GridFSController';
+  readBlob,
+  writeBlob,
+  deleteBlob,
+  getBlobDownloadUrl,
+  getBlobUploadUrl,
+} from '../controller/AzureBlobStorageController';
 import {
   createObject,
   deleteObject,
@@ -18,9 +20,8 @@ import {
   getObjectV2
 } from '../controller/ModelController';
 import { logRequest, logResponse } from '../services/logger';
-import { mongoose } from '../services/mongoose_service';
 import { isAdmin, isOrganizer } from '../services/permissions';
-import { SystemGridFSBucket } from '../services/gridfs';
+import { SystemBlobContainer } from '../services/azureBlobStorage';
 
 const apiRouter = express.Router();
 
@@ -124,15 +125,14 @@ apiRouter.post(
 /**
  * (Organizer)
  *
- * Get file from GridFSS
+ * Get file from Azure Blob Storage (direct download)
  */
-apiRouter.get('/gridfs', isOrganizer, async (req: Request, res: Response) => {
+apiRouter.get('/blob', isOrganizer, async (req: Request, res: Response) => {
   try {
-    // since we're returning a binary, don't log it direc
-    await readGridFSFile(
-      req.query.bucket as SystemGridFSBucket,
-      req.query.filename as string,
-      mongoose,
+    // since we're returning a binary, don't log it directly
+    await readBlob(
+      req.query.container as SystemBlobContainer,
+      req.query.blobName as string,
       res,
     );
 
@@ -151,17 +151,39 @@ apiRouter.get('/gridfs', isOrganizer, async (req: Request, res: Response) => {
 /**
  * (Organizer)
  *
- * Write file to GridFSS
+ * Get presigned download URL for Azure Blob Storage
  */
-apiRouter.put('/gridfs', isOrganizer, (req: Request, res: Response) => {
+apiRouter.get('/blob/download-url', isOrganizer, (req: Request, res: Response) => {
+  const expiresInMinutes = req.query.expiresInMinutes ? parseInt(req.query.expiresInMinutes as string) : 60;
+  
   logResponse(
     req,
     res,
-    writeGridFSFile(
-      req.query.bucket as SystemGridFSBucket,
-      req.query.filename as string,
-      mongoose,
-      (req as any)?.files?.file,
+    getBlobDownloadUrl(
+      req.query.container as SystemBlobContainer,
+      req.query.blobName as string,
+      expiresInMinutes,
+    ),
+  );
+});
+
+/**
+ * (Organizer)
+ *
+ * Upload file to Azure Blob Storage (direct upload)
+ */
+apiRouter.put('/blob', isOrganizer, (req: Request, res: Response) => {
+  const fileData = (req as any)?.files?.file?.data;
+  const contentType = (req as any)?.files?.file?.mimetype;
+  
+  logResponse(
+    req,
+    res,
+    writeBlob(
+      req.query.container as SystemBlobContainer,
+      req.query.blobName as string,
+      fileData,
+      contentType,
     ),
     true,
   );
@@ -170,16 +192,34 @@ apiRouter.put('/gridfs', isOrganizer, (req: Request, res: Response) => {
 /**
  * (Organizer)
  *
- * Delete file from GridFS
+ * Get presigned upload URL for Azure Blob Storage
  */
-apiRouter.delete('/gridfs', isOrganizer, (req: Request, res: Response) => {
+apiRouter.get('/blob/upload-url', isOrganizer, (req: Request, res: Response) => {
+  const expiresInMinutes = req.query.expiresInMinutes ? parseInt(req.query.expiresInMinutes as string) : 60;
+  
   logResponse(
     req,
     res,
-    deleteGridFSFile(
-      req.query.bucket as SystemGridFSBucket,
-      req.query.filename as string,
-      mongoose,
+    getBlobUploadUrl(
+      req.query.container as SystemBlobContainer,
+      req.query.blobName as string,
+      expiresInMinutes,
+    ),
+  );
+});
+
+/**
+ * (Organizer)
+ *
+ * Delete blob from Azure Blob Storage
+ */
+apiRouter.delete('/blob', isOrganizer, (req: Request, res: Response) => {
+  logResponse(
+    req,
+    res,
+    deleteBlob(
+      req.query.container as SystemBlobContainer,
+      req.query.blobName as string,
     ),
     true,
   );

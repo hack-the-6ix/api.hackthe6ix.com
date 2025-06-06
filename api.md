@@ -197,35 +197,57 @@ This endpoint should only be needed for migrating old databases.
 }
 ```
 
-### GET - Get file from GridFS (Organizer)
+### GET - Get file from Azure Blob Storage (Organizer)
 
-`/api/gridfs?filename=<filename goes here>`
+`/api/blob?container=<container>&blobName=<blobName>`
 
-Fetch a file stored in GridFS given its name. Note that it isn't guaranteed for files to have
-unique names if they are added to GridFS through methods other than `writeGridFSFile`.
+Fetch a file stored in Azure Blob Storage given its container and blob name.
 
 ##### Input Specification
 
-Specify the name of the file to be fetched as a query parameter.
+Specify the `container` and `blobName` of the file to be fetched as query parameters.
+Valid containers are: `resumes`.
 
 ##### Output Specification
 
 The queried file will be returned if successful.
 
-### PUT - Write file to GridFS (Organizer)
+### GET - Get presigned download URL for Azure Blob Storage (Organizer)
 
-`/api/gridfs?filename=<filename goes here>`
+`/api/blob/download-url?container=<container>&blobName=<blobName>&expiresInMinutes=<minutes>`
 
-Upload a file to GridFS with a specific file name. If a file exists with that name, delete it first.
+Get a temporary URL to download a file from Azure Blob Storage.
 
 ##### Input Specification
 
-Specify the filename as a query parameter and submit the file to be uploaded with the name "file".
+Specify the `container` and `blobName` of the file to be fetched as query parameters.
+Valid containers are: `resumes`.
+`expiresInMinutes` is an optional parameter to specify the validity duration of the URL in minutes (default is 60).
+
+##### Output Specification
+
+```
+{
+  status: 200,
+  message: "<presigned download url>"
+}
+```
+
+### PUT - Write file to Azure Blob Storage (Organizer)
+
+`/api/blob?container=<container>&blobName=<blobName>`
+
+Upload a file to Azure Blob Storage.
+
+##### Input Specification
+
+Specify the `container` and `blobName` as query parameters and submit the file to be uploaded with the name "file".
+Valid containers are: `resumes`.
 
 For example, a file can be manually added by running:
 
 ```bash
-http --form put localhost:3005/api/gridfs?filename=thisisthefilename.pdf file@file.pdf x-access-token:$TOKEN
+http --form put localhost:3005/api/blob?container=resumes&blobName=myresume.pdf file@file.pdf x-access-token:$TOKEN
 ```
 
 ##### Output Specification
@@ -237,15 +259,37 @@ http --form put localhost:3005/api/gridfs?filename=thisisthefilename.pdf file@fi
 }
 ```
 
-### DELETE - Delete file from GridFS (Organizer)
+### GET - Get presigned upload URL for Azure Blob Storage (Organizer)
 
-`/api/gridfs?filename=<filename goes here>`
+`/api/blob/upload-url?container=<container>&blobName=<blobName>&expiresInMinutes=<minutes>`
 
-Delete a file from GridFS given its name if it exists.
+Get a temporary URL to upload a file to Azure Blob Storage. This is useful for client-side uploads.
 
 ##### Input Specification
 
-Specify the file to be deleted as a query parameter.
+Specify the `container` and `blobName` of the file to be uploaded as query parameters.
+Valid containers are: `resumes`.
+`expiresInMinutes` is an optional parameter to specify the validity duration of the URL in minutes (default is 60).
+
+##### Output Specification
+
+```
+{
+  status: 200,
+  message: "<presigned upload url>"
+}
+```
+
+### DELETE - Delete file from Azure Blob Storage (Organizer)
+
+`/api/blob?container=<container>&blobName=<blobName>`
+
+Delete a file from Azure Blob Storage given its container and blob name.
+
+##### Input Specification
+
+Specify the `container` and `blobName` of the file to be deleted as query parameters.
+Valid containers are: `resumes`.
 
 ##### Output Specification
 

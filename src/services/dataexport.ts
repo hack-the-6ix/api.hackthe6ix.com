@@ -1,4 +1,4 @@
-import { exportAsZip } from '../controller/GridFSController';
+import { exportBlobsAsZip } from '../controller/AzureBlobStorageController';
 import {mongoose} from '../services/mongoose_service';
 import {Writable} from 'stream';
 import User from '../models/user/User';
@@ -25,12 +25,12 @@ export const resumeExport = async (outputStream: Writable) => {
     const filenames = resumeUsers.map((user) => {
         const resumeExtension = extname(user.hackerApplication.resumeFileName);
         return {
-            gfsfilename: user.hackerApplication.resumeFileName,
+            blobname: user.hackerApplication.resumeFileName,
             filename: `${user.firstName}_${user.lastName}_Resume_${user._id}${resumeExtension}`
         };
     });
 
-    await exportAsZip('resumes', filenames, mongoose, outputStream);
+    await exportBlobsAsZip('resumes', filenames, outputStream);
 
     return;
 }

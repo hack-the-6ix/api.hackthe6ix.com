@@ -21,6 +21,13 @@ import './services/mailer/util/verify_config';
 import './services/mongoose_service';
 import { InternalServerError } from './types/errors';
 
+import { initializeBlobService } from './services/azureBlobStorage';
+if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
+  initializeBlobService(process.env.AZURE_STORAGE_CONNECTION_STRING);
+} else {
+  log.error('AZURE_STORAGE_CONNECTION_STRING is not set. Uploads will not work!');
+}
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));

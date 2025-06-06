@@ -33,7 +33,8 @@ import {
   fetchDiscordConnectionMetadata,
   disassociateFromDiscord,
   addCheckInNotes,
-  removeCheckInNotes
+  removeCheckInNotes,
+  getResumeURL
 } from '../controller/UserController';
 import { logResponse } from '../services/logger';
 import sendAllTemplates from '../services/mailer/sendAllTemplates';
@@ -138,10 +139,18 @@ actionRouter.put('/updateResume', isHacker, (req: Request, res: Response) => {
     updateResume(
       req.executor!,
       (req as any)?.files?.resume,
-      mongoose,
     ),
     true,
   );
+});
+
+/**
+ * (Hacker)
+ *
+ * Get resume URL
+ */
+actionRouter.get('/getResumeURL', isHacker, (req: Request, res: Response) => {
+  logResponse(req, res, getResumeURL(req.executor!));
 });
 
 /**
