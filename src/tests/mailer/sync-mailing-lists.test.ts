@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 import User from '../../models/user/User';
-import DynamicCacheProvider from "../../services/cache";
+import DynamicCacheProvider from '../../services/cache';
 import syncMailingList from '../../services/mailer/syncMailingList';
 import syncMailingLists from '../../services/mailer/syncMailingLists';
-import { getList } from '../../services/mailer/util/external';
+import { getList } from '../../services/mailer/util/db';
+import userInList from '../../services/mailer/util/user_in_list';
 import { hackerUser, runAfterAll, runAfterEach, runBeforeAll, runBeforeEach } from '../test-utils';
-import { mockGetList, mockGetListFilterQuery, mockMailingLists } from './test-utils';
+import { mockGetList, mockMailingLists } from './test-utils';
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -24,17 +25,13 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-
-jest.mock('../../services/mailer/util/external', () => ({
-  addSubscriptionRequest: jest.fn(),
-  deleteSubscriptionRequest: jest.fn(),
+jest.mock('../../services/mailer/util/db', () => ({
   getList: jest.fn(),
-  getMailingListSubscriptionsRequest: jest.fn(),
-  getTemplate: jest.fn(),
-  sendEmailRequest: jest.fn(),
 }));
 
-jest.mock('../../services/mailer/syncMailingList', () => jest.fn((): any => undefined));
+jest.mock('../../services/mailer/syncMailingList', () => jest.fn());
+jest.mock('../../services/mailer/util/user_in_list', () => jest.fn());
+
 jest.mock('../../types/mailer', () => {
   const { mockMailingLists } = jest.requireActual('./test-utils');
   return {
@@ -46,158 +43,71 @@ jest.mock('../../types/mailer', () => {
 // the list config can be changed between tests without
 // needing to make up new list names
 jest.spyOn(DynamicCacheProvider.prototype, 'get')
-    .mockImplementation(async function (key){
-      return await this._provider(key);
-    });
+  .mockImplementation(async function(key) {
+    return await (this as any)._provider(key);
+  });
 
 describe('Sync Mailing Lists', () => {
-  test('Sync specific mailing lists', async () => {
-    getList.mockImplementation((x: string) => (mockGetList as any)[x]);
-
-    const selectedLists = [
-      'list1',
-      'list2',
-    ];
-
-    const lists = await syncMailingLists(selectedLists);
-
-    expect(new Set(syncMailingList.mock.calls)).toEqual(new Set(selectedLists.map((k: string) => (
-      [(mockGetList as any)[k].listID, [], undefined, undefined]
-    ))));
-
-    expect(new Set(getList.mock.calls)).toEqual(new Set(selectedLists.map((k: string) => (
-      [(mockMailingLists as any)[k]]
-    ))));
-
-    expect(new Set(lists)).toEqual(new Set(selectedLists));
+  beforeEach(() => {
+    (syncMailingList as jest.Mock).mockClear();
+    (getList as jest.Mock).mockClear();
+    (userInList as jest.Mock).mockClear();
   });
+
   test('Sync all mailing lists', async () => {
-    getList.mockImplementation((x: string) => (mockGetList as any)[x]);
-    const lists = await syncMailingLists();
+    (getList as jest.Mock).mockImplementation((x: string) => (mockGetList as any)[x]);
+    (userInList as jest.Mock).mockReturnValue(true);
 
-    expect(new Set(syncMailingList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockGetList as any)[k].listID, [], undefined, undefined]
-    ))));
+    const user1 = await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user1@test.com', mailingListSubcriberID: 1 });
+    const user2 = await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user2@test.com', mailingListSubcriberID: 2, firstName: 'Apple' });
+    const user3 = await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user3@test.com', mailingListSubcriberID: 3, firstName: 'Banana' });
+    
+    await syncMailingLists();
 
-    expect(new Set(getList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockMailingLists as any)[k]]
-    ))));
-
-    expect(new Set(lists)).toEqual(new Set(Object.keys(mockMailingLists)));
+    expect(syncMailingList).toHaveBeenCalledTimes(Object.keys(mockMailingLists).length);
+    expect(syncMailingList).toHaveBeenCalledWith(mockGetList.list1.listID, [user2.mailingListSubcriberID]);
+    expect(syncMailingList).toHaveBeenCalledWith(mockGetList.list2.listID, [user3.mailingListSubcriberID]);
+    expect(syncMailingList).toHaveBeenCalledWith(mockGetList.list3.listID, [user1.mailingListSubcriberID, user2.mailingListSubcriberID, user3.mailingListSubcriberID]);
   });
-  test('Force Update', async () => {
-    getList.mockImplementation((x: string) => (mockGetList as any)[x]);
-    const lists = await syncMailingLists(undefined, true);
 
-    expect(new Set(syncMailingList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockGetList as any)[k].listID, [], true, undefined]
-    ))));
+  test('Sync specific mailing lists', async () => {
+    (getList as jest.Mock).mockImplementation((x: string) => (mockGetList as any)[x]);
+    (userInList as jest.Mock).mockReturnValue(true);
 
-    expect(new Set(getList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockMailingLists as any)[k]]
-    ))));
+    await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user1@test.com', mailingListSubcriberID: 1 });
+    const user2 = await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user2@test.com', mailingListSubcriberID: 2, firstName: 'Apple' });
+    await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user3@test.com', mailingListSubcriberID: 3, firstName: 'Banana' });
+    
+    const selectedLists = ['list1'];
+    await syncMailingLists(selectedLists);
 
-    expect(new Set(lists)).toEqual(new Set(Object.keys(mockMailingLists)));
+    expect(syncMailingList).toHaveBeenCalledTimes(1);
+    expect(syncMailingList).toHaveBeenCalledWith(mockGetList.list1.listID, [user2.mailingListSubcriberID]);
   });
-  test('Sync single user', async () => {
-    getList.mockImplementation((x: string) => (mockGetList as any)[x]);
-    const email = hackerUser.email;
-    const lists = await syncMailingLists(undefined, false, email);
 
-    expect(new Set(syncMailingList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockGetList as any)[k].listID, [], false, email]
-    ))));
+  test('User filtering', async () => {
+    (getList as jest.Mock).mockImplementation((x: string) => (mockGetList as any)[x]);
+    
+    const user1 = await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user1@test.com', mailingListSubcriberID: 1, firstName: 'Apple' });
+    await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user2@test.com', mailingListSubcriberID: 2, firstName: 'Apple' });
+    
+    (userInList as jest.Mock).mockImplementation((u: any) => u.email === user1.email);
 
-    expect(new Set(getList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockMailingLists as any)[k]]
-    ))));
+    await syncMailingLists(['list1']);
 
-    expect(new Set(lists)).toEqual(new Set(Object.keys(mockMailingLists)));
+    expect(syncMailingList).toHaveBeenCalledTimes(1);
+    expect(syncMailingList).toHaveBeenCalledWith(mockGetList.list1.listID, [user1.mailingListSubcriberID]);
   });
-  test('Config is empty', async () => {
-    getList.mockReturnValue({});
-    const email = hackerUser.email;
-    const lists = await syncMailingLists(undefined, false, email);
 
-    expect(new Set(syncMailingList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      ['', [], false, email]
-    ))));
+  test('No subscriberID', async () => {
+    (getList as jest.Mock).mockImplementation((x: string) => (mockGetList as any)[x]);
+    (userInList as jest.Mock).mockReturnValue(true);
 
-    expect(new Set(getList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-      [(mockMailingLists as any)[k]]
-    ))));
+    await User.create({ ...hackerUser, _id: new mongoose.Types.ObjectId(), email: 'user1@test.com', firstName: 'Apple' });
+    
+    await syncMailingLists(['list1']);
 
-    expect(new Set(lists)).toEqual(new Set(Object.keys(mockMailingLists)));
-  });
-  describe('Queries', () => {
-
-    test('Standard', async () => {
-      getList.mockImplementation((x: string) => (mockGetList as any)[x]);
-      const apple = await User.create({
-        ...hackerUser,
-        _id: new mongoose.Types.ObjectId(),
-        firstName: mockGetList.list1.query.firstName,
-        email: 'apple@gmail.com',
-      });
-      const banana = await User.create({
-        ...hackerUser,
-        _id: new mongoose.Types.ObjectId(),
-        firstName: mockGetList.list2.query.firstName,
-        email: 'banana@gmail.com',
-      });
-      const orange = await User.create({
-        ...hackerUser,
-        _id: new mongoose.Types.ObjectId(),
-        firstName: mockGetList.list3.query.firstName,
-        email: 'orange@gmail.com',
-      });
-
-      const lists = await syncMailingLists();
-
-      expect(new Set(syncMailingList.mock.calls)).toEqual(new Set([
-        [mockGetList.list1.listID, [apple.email], undefined, undefined],
-        [mockGetList.list2.listID, [banana.email], undefined, undefined],
-        [mockGetList.list3.listID, [orange.email], undefined, undefined],
-      ]));
-
-      expect(new Set(getList.mock.calls)).toEqual(new Set(Object.keys(mockMailingLists).map((k: string) => (
-        [(mockMailingLists as any)[k]]
-      ))));
-
-      expect(new Set(lists)).toEqual(new Set(Object.keys(mockMailingLists)));
-    });
-
-    test('Filter Query', async () => {
-      getList.mockImplementation((x: string) => (mockGetListFilterQuery as any)[x]);
-      const appleNotExpired = await User.create({
-        ...hackerUser,
-        _id: new mongoose.Types.ObjectId(),
-        firstName: mockGetListFilterQuery.list1.query.firstName,
-        email: 'wtf@gmail.com',
-      });
-      const appleExpired = await User.create({
-        ...hackerUser,
-        _id: new mongoose.Types.ObjectId(),
-        firstName: mockGetListFilterQuery.list1.query.firstName,
-        status: {
-          accepted: true,
-          statusReleased: true,
-        },
-        personalRSVPDeadline: -1,
-        email: 'appleExpired@gmail.com',
-      });
-
-      const lists = await syncMailingLists();
-
-      expect(syncMailingList.mock.calls[0]).toEqual([mockGetList.list1.listID, [appleExpired.email], undefined, undefined]);
-
-      expect(getList.mock.calls[0]).toEqual(['list1']);
-
-      expect(lists).toEqual([
-        'list1',
-        'list2',
-        'list3',
-      ]);
-    });
+    expect(syncMailingList).toHaveBeenCalledTimes(1);
+    expect(syncMailingList).toHaveBeenCalledWith(mockGetList.list1.listID, []);
   });
 });

@@ -1,18 +1,14 @@
-import User from '../../models/user/User';
 import sendEmail from '../../services/mailer/sendEmail';
 import sendTemplateEmail from '../../services/mailer/sendTemplateEmail';
-import { okResponse } from '../../services/mailer/util/dev';
-import { getTemplate, sendEmailRequest } from '../../services/mailer/util/external';
+import { getTemplate } from '../../services/mailer/util/db';
 import { MailTemplate } from '../../types/mailer';
 import {
-  hackerUser,
-  mockSuccessResponse,
   runAfterAll,
   runAfterEach,
   runBeforeAll,
   runBeforeEach,
 } from '../test-utils';
-import { mockSubject, mockTags, mockTemplateID, mockTemplateName } from './test-utils';
+import { mockMailTemplate, mockTags } from './test-utils';
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -31,68 +27,29 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../services/mailer/util/external', () => ({
-  addSubscriptionRequest: jest.fn(),
-  deleteSubscriptionRequest: jest.fn(),
-  getList: jest.fn(),
-  getMailingListSubscriptionsRequest: jest.fn(),
+jest.mock('../../services/mailer/util/db', () => ({
   getTemplate: jest.fn(),
-  sendEmailRequest: jest.fn(),
 }));
 
 jest.mock('../../services/mailer/sendEmail', () => jest.fn((): any => undefined));
 
-describe('Send template email', () => {
-  test('Email corresponds to registered user', async () => {
-    sendEmailRequest.mockReturnValue(mockSuccessResponse());
+test('Send template email', async () => {
+  const mockTemplateName = 'template1';
+  const mockTemplate = mockMailTemplate[mockTemplateName];
+  (getTemplate as jest.Mock).mockResolvedValue(mockTemplate);
 
-    const hacker = await User.create(hackerUser);
+  const subscriberID = 123;
 
-    getTemplate.mockReturnValue({
-      subject: mockSubject,
-      templateID: mockTemplateID,
-    });
+  await sendTemplateEmail(
+    subscriberID,
+    mockTemplateName as MailTemplate,
+    mockTags,
+  );
 
-    await sendTemplateEmail(
-      hacker.email,
-      mockTemplateName as MailTemplate,
-      mockTags,
-    );
-
-    const profileMergeFields = hacker.toJSON().mailmerge;
-
-    expect(getTemplate).toHaveBeenCalledWith(mockTemplateName);
-    expect(sendEmail).toHaveBeenCalledWith(
-      hackerUser.email,
-      mockTemplateID,
-      mockSubject,
-      {
-        ...mockTags,
-        ...profileMergeFields,
-      },
-    );
-  });
-
-  test('Email does not correspond to registered user', async () => {
-    sendEmailRequest.mockReturnValue(okResponse);
-
-    getTemplate.mockReturnValue({
-      subject: mockSubject,
-      templateID: mockTemplateID,
-    });
-
-    await sendTemplateEmail(
-      'Banana smoothie',
-      mockTemplateName as MailTemplate,
-      mockTags,
-    );
-
-    expect(getTemplate).toHaveBeenCalledWith(mockTemplateName);
-    expect(sendEmail).toHaveBeenCalledWith(
-      'Banana smoothie',
-      mockTemplateID,
-      mockSubject,
-      mockTags,
-    );
-  });
+  expect(getTemplate).toHaveBeenCalledWith(mockTemplateName);
+  expect(sendEmail).toHaveBeenCalledWith(
+    subscriberID,
+    mockTemplate.templateID,
+    mockTags,
+  );
 });

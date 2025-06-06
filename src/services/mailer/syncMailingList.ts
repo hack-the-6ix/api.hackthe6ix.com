@@ -26,8 +26,12 @@ export default async (mailingListID: number, subscriberIDs: number[]) => {
   const toBeDeleted = currentSubscribers.filter((id: number) => !targetSubscribersSet.has(id));
 
   // Step 4: Submit the new list of subscriber IDs
-  await addSubscriptionsRequest(mailingListID, toBeAdded);
-  await deleteSubscriptionsRequest(mailingListID, toBeDeleted);
+  if (toBeAdded.length > 0) {
+    await addSubscriptionsRequest(mailingListID, toBeAdded);
+  }
+  if (toBeDeleted.length > 0) {
+    await deleteSubscriptionsRequest(mailingListID, toBeDeleted);
+  }
 
   // Step 5: Verify sync was successful by fetching all subscribers
   const finalSubscribers = await getMailingListSubscriptionsRequest(mailingListID);
