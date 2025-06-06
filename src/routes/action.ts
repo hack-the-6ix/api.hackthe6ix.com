@@ -304,8 +304,6 @@ actionRouter.post('/syncMailingLists', isOrganizer, (req: Request, res: Response
     res,
     syncMailingLists(
       req.body.mailingLists,
-      req.body.forceUpdate,
-      req.body.email,
     ),
     true,
   );
@@ -322,6 +320,7 @@ actionRouter.post('/verifyMailingList', isOrganizer, (req: Request, res: Respons
     res,
     verifyMailingList(
       req.executor!,
+      req.body.subscriberID,
     ),
     true,
   );
@@ -355,7 +354,8 @@ actionRouter.post('/templateTest', isOrganizer, (req: Request, res: Response) =>
     req,
     res,
     sendAllTemplates(
-      req.executor!,
+      req.body.subscriberID,
+      req.body.additional_data,
     ),
     true,
   );

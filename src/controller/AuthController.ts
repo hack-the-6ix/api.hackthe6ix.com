@@ -9,12 +9,12 @@ import User from '../models/user/User';
 
 import { getCircularReplacer, log } from '../services/logger';
 
-import syncMailingLists from '../services/mailer/syncMailingLists';
 import { fetchClient } from '../services/multiprovider';
 import * as permissions from '../services/permissions';
 
 import { BadRequestError, ForbiddenError, InternalServerError } from '../types/errors';
-import { createFederatedUser } from './UserController';
+import { createFederatedUser, registerUserMailingSubscriberID } from './UserController';
+import syncUserMailingLists from '../services/mailer/syncUserMailingLists';
 
 let settingsCache = {} as ISettings;
 let settingsTime = 0;
@@ -53,7 +53,10 @@ const _getUserData = async (url: string, token: string): Promise<Record<string, 
   return response.data;
 };
 
-const _issueLocalToken = async (assertAttributes: Record<string, any>): Promise<string> => {
+const _issueLocalTokenAndGetUser = async (assertAttributes: Record<string, any>): Promise<{
+  token: string,
+  user: IUser
+}> => {
   const userInfo = await createFederatedUser(assertAttributes.sub, assertAttributes.email, assertAttributes.given_name, assertAttributes.family_name, assertAttributes.groups, true);
 
   const token = permissions.createJwt({
@@ -62,7 +65,10 @@ const _issueLocalToken = async (assertAttributes: Record<string, any>): Promise<
     roles: userInfo.roles,
   });
 
-  return token;
+  return {
+    token: token,
+    user: userInfo,
+  };
 };
 
 const _refreshToken = async (client_id: string, client_secret: string, url: string, refreshToken: string): Promise<{
@@ -104,18 +110,22 @@ export const handleCallback = async (providerName: string, code: string, stateTe
 
     const userData = await _getUserData(provider.userinfo_url, accesstoken.token.access_token as string);
 
-    const localToken = await _issueLocalToken(userData);
+    const { token: localToken, user } = await _issueLocalTokenAndGetUser(userData);
 
-    // Trigger a mailing list sync on login
-    // We don't really need to wait for this, so we'll run it async
-    syncMailingLists(undefined, true, userData.email)
-        .then(() => {
-          log.debug(`Synced mailing list for ${userData.email}`);
-        })
-        .catch((e) => {
-          log.warn(`Unable to sync mailing list for ${userData.email}`, e);
-        });
+    if (user.mailingListSubcriberID === undefined) {
+      await registerUserMailingSubscriberID(user._id, await syncUserMailingLists(user));
+    } else {
+      // Trigger a mailing list sync on login
+      // We don't really need to wait for this, so we'll run it async
+      syncUserMailingLists(user)
+          .then(() => {
+            log.debug(`Synced mailing list for ${userData.email}`);
+          })
+          .catch((e) => {
+            log.warn(`Unable to sync mailing list for ${userData.email}`, e);
+          });
 
+    }
     // Log the login event
     const logPayload = JSON.stringify({
       ip: ip || 'N/A',
@@ -183,10 +193,10 @@ export const handleRefresh = async (providerName: string, refreshToken: string):
 
     const userData = await _getUserData(provider.userinfo_url, newTokens['token']);
 
-    const token = await _issueLocalToken(userData);
+    const { token: localToken, user } = await _issueLocalTokenAndGetUser(userData);
 
     return {
-      token: token,
+      token: localToken,
       refreshToken: newTokens['refreshToken'],
     };
   } catch (err) {

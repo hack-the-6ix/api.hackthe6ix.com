@@ -968,6 +968,15 @@ export const fields = {
     hackerApplication: hackerApplication,
     internal: internal,
     mailmerge: mailmerge,
+    mailingListSubcriberID: {
+      type: Number,
+      required: false,
+      caption: 'Mailing List Subcriber ID',
+
+      writeCheck: (request: WriteCheckRequest<string, IUser>) =>
+        isOrganizer(request.requestUser) && maxLength(64)(request),
+      readCheck: true,
+    },
 
     /**
      * This is a special field used to allow the settings document mapped to every
@@ -1052,6 +1061,7 @@ export interface IUser extends BasicUser {
   computedApplicationOpen: number;
   computedApplicationDeadline: number;
   computedRSVPDeadline: number;
+  mailingListSubcriberID?: number;
 }
 
 export interface IMailMerge {

@@ -38,6 +38,7 @@ import {
 import {JsonWebTokenError, TokenExpiredError} from "jsonwebtoken";
 import {queueVerification} from "./DiscordController";
 import { getBlobDownloadUrl, writeBlob } from './AzureBlobStorageController';
+import syncUserMailingLists from '../services/mailer/syncUserMailingLists';
 
 
 export const createFederatedUser = async (linkID: string, email: string, firstName: string, lastName: string, groupsList: string[], groupsHaveIDPPrefix = true): Promise<IUser> => {
@@ -158,8 +159,8 @@ export const updateApplication = async (requestUser: IUser, submit: boolean, hac
   }
 
   if (submit) {
-    await syncMailingLists(undefined, true, requestUser.email);
-    await sendTemplateEmail(requestUser.email, MailTemplate.applied);
+    await syncUserMailingLists(requestUser);
+    await sendTemplateEmail(requestUser.mailingListSubcriberID!, MailTemplate.applied);
   }
 
   return 'Success';
@@ -245,7 +246,7 @@ export const rsvp = async (requestUser: IUser, rsvp: IRSVP) => {
 
     const isAttending = !!rsvp.attending;
 
-    await User.findOneAndUpdate({
+    const user = await User.findOneAndUpdate({
       _id: requestUser._id,
     }, {
       'status.confirmed': isAttending,
@@ -253,12 +254,16 @@ export const rsvp = async (requestUser: IUser, rsvp: IRSVP) => {
       'rsvpForm': rsvp.form
     });
 
-    await syncMailingLists(undefined, true, requestUser.email);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    await syncUserMailingLists(user); 
 
     if (isAttending) {
-      await sendTemplateEmail(requestUser.email, MailTemplate.confirmed);
+      await sendTemplateEmail(requestUser.mailingListSubcriberID!, MailTemplate.confirmed);
     } else {
-      await sendTemplateEmail(requestUser.email, MailTemplate.declined);
+      await sendTemplateEmail(requestUser.mailingListSubcriberID!, MailTemplate.declined);
     }
 
     return 'Success';
@@ -405,7 +410,7 @@ export const releaseApplicationStatus = async () => {
     'status.statusReleased': true,
   });
 
-  await syncMailingLists(undefined, true);
+  await syncMailingLists();
 
   return usersModified;
 };
@@ -825,4 +830,18 @@ export const removeCheckInNotes = async (userID: string, notes: string[]): Promi
   }
 
   return user.checkInNotes;
+}
+
+export const registerUserMailingSubscriberID = async (userID: string, subscriberID: number) => {
+  const user = await User.findOneAndUpdate({
+    _id: userID
+  }, {
+    mailingListSubcriberID: subscriberID
+  });
+
+  if (!user) {
+    throw new NotFoundError("Unable to find user with the given ID.");
+  }
+
+  return user.mailingListSubcriberID;
 }
