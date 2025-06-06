@@ -1,44 +1,37 @@
 {
   "templates": {
     "applicationIncomplete": {
-      "subject": "[ACTION REQUIRED]: Hack the 6ix Application Incomplete ",
-      "templateID": "8"
+      "templateID": 8
     },
     "applied": {
-      "subject": "Hack the 6ix Application Received",
-      "templateID": "9"
+      "templateID": 9
     },
     "confirmed": {
-      "subject": "See you at Hack the 6ix!",
-      "templateID": "10"
+      "templateID": 10
     },
     "declined": {
-      "subject": "We’re Sorry to See You Go",
-      "templateID": "11"
+      "templateID": 11
     },
     "accepted": {
-      "subject": "[ACTION REQUIRED] Congratulations! Welcome to Hack the 6ix!",
-      "templateID": "12"
+      "templateID": 12
     },
     "rejected": {
-      "subject": "Hack the 6ix application update",
-      "templateID": "13"
+      "templateID": 13
     },
     "waitlisted": {
-      "subject": "Hack the 6ix application update",
-      "templateID": "14"
+      "templateID": 14
     }
   },
   "lists": {
     "applicationIncomplete": {
-      "listID": "PRfCSpwtuo",
+      "listID": 1,
       "query": {
         "groups.hacker": true,
         "status.applied": false
       }
     },
     "applied": {
-      "listID": "yMGUBShwkA",
+      "listID": 2,
       "query": {
         "$or": [
           {
@@ -57,14 +50,14 @@
       }
     },
     "confirmed": {
-      "listID": "FxhldDmesB",
+      "listID": 3,
       "query": {
         "groups.hacker": true,
         "status.confirmed": true
       }
     },
     "checkedIn": {
-      "listID": "NgoUwuwuWw",
+      "listID": 4,
       "query": {
         "groups.hacker": true,
         "status.confirmed": true,
@@ -72,14 +65,14 @@
       }
     },
     "declined": {
-      "listID": "WOJjclXUbL",
+      "listID": 5,
       "query": {
         "groups.hacker": true,
         "status.declined": true
       }
     },
     "accepted": {
-      "listID": "JXQiyonenl",
+      "listID": 6,
       "query": {
         "groups.hacker": true,
         "status.accepted": true,
@@ -92,7 +85,7 @@
       }
     },
     "rejected": {
-      "listID": "JfVlttjhlt",
+      "listID": 7,
       "query": {
         "groups.hacker": true,
         "status.rejected": true,
@@ -102,7 +95,7 @@
       }
     },
     "waitlisted": {
-      "listID": "KypeueiHiZ",
+      "listID": 8,
       "query": {
         "groups.hacker": true,
         "status.waitlisted": true,

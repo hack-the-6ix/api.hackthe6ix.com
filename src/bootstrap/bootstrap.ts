@@ -58,13 +58,12 @@ async function initializeTemplates() {
     const mailerData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'config', 'mailer.json')).toString('utf8'));
 
     // Verify templates
-    verifyConfigEntity(mailerData, MailTemplate, 'templates', ['subject', 'templateID']);
+    verifyConfigEntity(mailerData, MailTemplate, 'templates', ['templateID']);
 
     const dataRoot = mailerData["templates"]
     await MailerTemplate.create(Object.keys(dataRoot).map((name) => {
       return {
         name,
-        subject: dataRoot[name]["subject"],
         templateID: dataRoot[name]["templateID"]
       }
     }));
