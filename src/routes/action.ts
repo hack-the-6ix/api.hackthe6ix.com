@@ -139,7 +139,6 @@ actionRouter.put('/updateResume', isHacker, (req: Request, res: Response) => {
     updateResume(
       req.executor!,
       (req as any)?.files?.resume,
-      mongoose,
     ),
     true,
   );

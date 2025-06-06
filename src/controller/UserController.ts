@@ -1,4 +1,3 @@
-import {Mongoose} from 'mongoose';
 import * as qrcode from 'qrcode';
 import { enumOptions } from '../models/user/enums';
 import {fields, IPartialApplication, IUser} from '../models/user/fields';
@@ -23,7 +22,6 @@ import {
   QRCodeGenerateBulkResponse,
   QRCodeGenerateRequest
 } from '../types/types';
-import { writeGridFSFile } from './GridFSController';
 import { editObject, getObject } from './ModelController';
 import { testCanUpdateApplication, validateSubmission } from './util/checker';
 import { fetchUniverseState, getModels } from './util/resources';
@@ -170,13 +168,10 @@ export const updateApplication = async (requestUser: IUser, submit: boolean, hac
 /**
  * Update resume on file. Only pdf files under 5MB will be allowed.
  *
- * Reference: https://stackoverflow.com/questions/16482233/store-file-in-mongos-gridfs-with-expressjs-after-upload
- *
  * @param requestUser
  * @param expressFile - express fileupload file object
- * @param mongoose - instance of mongoose to extract connection from
  */
-export const updateResume = async (requestUser: IUser, expressFile: any, mongoose: Mongoose) => {
+export const updateResume = async (requestUser: IUser, expressFile: any) => {
   if (!expressFile) {
     throw new BadRequestError('Invalid file');
   }

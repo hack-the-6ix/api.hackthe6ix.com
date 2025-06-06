@@ -163,17 +163,17 @@ export const deleteBlob = async (containerName: SystemBlobContainer, blobName: s
  */
 export const exportBlobsAsZip = async (
   containerName: SystemBlobContainer,
-  blobData: { blobName: string; filename: string }[],
+  blobData: { blobname: string; filename: string }[],
   outputStream: Writable
 ): Promise<void> => {
   const containerClient = getContainerClient(containerName);
 
   // Check if all blobs exist
-  const existsChecks = blobData.map(async ({ blobName }) => {
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  const existsChecks = blobData.map(async ({ blobname }) => {
+    const blockBlobClient = containerClient.getBlockBlobClient(blobname);
     const exists = await blockBlobClient.exists();
     if (!exists) {
-      throw new NotFoundError(`Blob ${blobName} not found`);
+      throw new NotFoundError(`Blob ${blobname} not found`);
     }
     return blockBlobClient;
   });

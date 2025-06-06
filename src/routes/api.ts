@@ -6,19 +6,11 @@
 
 import express, { Request, Response } from 'express';
 import {
-  deleteGridFSFile,
-  readGridFSFile,
-  writeGridFSFile,
-} from '../controller/GridFSController';
-import {
   readBlob,
   writeBlob,
   deleteBlob,
   getBlobDownloadUrl,
   getBlobUploadUrl,
-  exportBlobsAsZip,
-  listBlobs,
-  blobExists
 } from '../controller/AzureBlobStorageController';
 import {
   createObject,
@@ -28,9 +20,7 @@ import {
   getObjectV2
 } from '../controller/ModelController';
 import { logRequest, logResponse } from '../services/logger';
-import { mongoose } from '../services/mongoose_service';
 import { isAdmin, isOrganizer } from '../services/permissions';
-import { SystemGridFSBucket } from '../services/gridfs';
 import { SystemBlobContainer } from '../services/azureBlobStorage';
 
 const apiRouter = express.Router();
@@ -131,70 +121,6 @@ apiRouter.post(
     );
   },
 );
-
-/**
- * (Organizer)
- *
- * Get file from GridFSS
- */
-apiRouter.get('/gridfs', isOrganizer, async (req: Request, res: Response) => {
-  try {
-    // since we're returning a binary, don't log it direc
-    await readGridFSFile(
-      req.query.bucket as SystemGridFSBucket,
-      req.query.filename as string,
-      mongoose,
-      res,
-    );
-
-    logRequest(req);
-  } catch (e) {
-    logResponse(
-      req,
-      res,
-      (async () => {
-        throw e;
-      })(),
-    );
-  }
-});
-
-/**
- * (Organizer)
- *
- * Write file to GridFSS
- */
-apiRouter.put('/gridfs', isOrganizer, (req: Request, res: Response) => {
-  logResponse(
-    req,
-    res,
-    writeGridFSFile(
-      req.query.bucket as SystemGridFSBucket,
-      req.query.filename as string,
-      mongoose,
-      (req as any)?.files?.file,
-    ),
-    true,
-  );
-});
-
-/**
- * (Organizer)
- *
- * Delete file from GridFS
- */
-apiRouter.delete('/gridfs', isOrganizer, (req: Request, res: Response) => {
-  logResponse(
-    req,
-    res,
-    deleteGridFSFile(
-      req.query.bucket as SystemGridFSBucket,
-      req.query.filename as string,
-      mongoose,
-    ),
-    true,
-  );
-});
 
 /**
  * (Organizer)
