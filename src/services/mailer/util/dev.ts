@@ -1,25 +1,37 @@
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { InternalServerError } from '../../../types/errors';
 import {log} from "../../logger";
 
-export const okResponse = { status: 200, data: {} as any };
 const devLogPath = '../../../../dev_logs';
-const defaultSubscriptions = {
-  emails: [] as string[],
-  mailmerges: [] as string[],
-};
+const subscribersPath = path.resolve(__dirname, devLogPath, 'subscribers.json');
+const mailingListsPath = path.resolve(__dirname, devLogPath, 'mailing_lists');
 
+interface MockSubscriber {
+    id: number;
+    uuid: string;
+    created_at: string;
+    updated_at: string;
+    email: string;
+    name: string;
+    attribs: any;
+    lists: number[];
+    status: 'enabled' | 'disabled';
+}
+
+// Initialize dev log directory
 if(process.env.NODE_ENV === 'development'){
   try {
     const absDevLogPath = path.resolve(path.join(__dirname, devLogPath));
     if (!fs.existsSync(absDevLogPath)) {
       fs.mkdirSync(absDevLogPath, {recursive: true});
-
-      const mailPath = path.join(absDevLogPath, 'mailing_lists');
-      if (!fs.existsSync(mailPath)) {
-        fs.mkdirSync(mailPath);
-      }
+    }
+    if (!fs.existsSync(subscribersPath)) {
+        fs.writeFileSync(subscribersPath, JSON.stringify([]));
+    }
+    if (!fs.existsSync(mailingListsPath)) {
+        fs.mkdirSync(mailingListsPath, {recursive: true});
     }
     log.info("Successfully initialized development mailing logging.")
   }
@@ -28,16 +40,34 @@ if(process.env.NODE_ENV === 'development'){
   }
 }
 
-/**
- * Sends a mock email, which just gets added to a log file
- *
- * @param recipientEmail - address to send the email to
- * @param templateID - Mailtrain ID of email template
- * @param subject - email subject
- * @param tags - data to be substituted into the email
- */
-export const mockSendEmail = async (recipientEmail: string, templateID: string, subject: string, tags: { [key: string]: string }) => {
-  const message = `[${new Date()}] Template ${templateID} was sent to ${recipientEmail} with submit ${subject} and tags ${JSON.stringify(tags)}\n`;
+const readSubscribers = (): MockSubscriber[] => {
+    if (!fs.existsSync(subscribersPath)) return [];
+    return JSON.parse(fs.readFileSync(subscribersPath, 'utf-8'));
+}
+
+const writeSubscribers = (subscribers: MockSubscriber[]) => {
+    fs.writeFileSync(subscribersPath, JSON.stringify(subscribers, null, 2));
+}
+
+const getMailingListLogFileName = (mailingListID: number | string) => path.resolve(mailingListsPath, `${mailingListID}.json`);
+
+const readMailingList = (mailingListID: number | string): number[] => {
+    const fileName = getMailingListLogFileName(mailingListID);
+    if (!fs.existsSync(fileName)) return [];
+    return JSON.parse(fs.readFileSync(fileName, 'utf-8'));
+}
+
+const writeMailingList = (mailingListID: number | string, subscriberIDs: number[]) => {
+    const fileName = getMailingListLogFileName(mailingListID);
+    fs.writeFileSync(fileName, JSON.stringify(subscriberIDs, null, 2));
+}
+
+export const mockSendEmail = async (subscriberID: number, templateID: number, additional_data: any) => {
+  const subscribers = readSubscribers();
+  const subscriber = subscribers.find(s => s.id === subscriberID);
+  const recipientEmail = subscriber ? subscriber.email : `subscriber_id_${subscriberID}`;
+
+  const message = `[${new Date().toISOString()}] Template ${templateID} was sent to ${recipientEmail} (ID: ${subscriberID}) with data ${JSON.stringify(additional_data)}\n`;
 
   fs.appendFile(path.resolve(__dirname, devLogPath + '/mailer.log'), message, (err) => {
     if (err) {
@@ -45,106 +75,118 @@ export const mockSendEmail = async (recipientEmail: string, templateID: string, 
     }
   });
 
-  return okResponse;
-};
-
-const getMailingListLogFileName = (mailingListID: string) => path.resolve(__dirname, devLogPath + `/mailing_lists/${mailingListID}.log`);
-
-const readLog = (mailingListID: string) => {
-  const path = getMailingListLogFileName(mailingListID);
-  const existingFile = fs.existsSync(path)
-    ? fs.readFileSync(path, 'utf8')
-    : JSON.stringify(defaultSubscriptions);
-
-  return existingFile;
-};
-
-/**
- * Get subscriptions from dev mailing list
- * @param mailingListID
- */
-export const mockGetSubscriptions = async (mailingListID: string) => {
-  const existingFile = readLog(mailingListID);
-
   return {
-    status: 200, data: {
-      data: {
-        subscriptions: JSON.parse(existingFile).emails.map((email: string) => (
-          {
-            email: email,
-          }
-        )),
-      },
-    },
+    status: 200,
+    data: { data: true },
+    statusText: 'OK',
+    headers: {},
+    config: {},
   };
 };
 
-/**
- * Adds subscription from dev mailing list
- * @param mailingListID
- * @param email
- * @param mailmerge
- */
-export const mockAddSubscription = async (mailingListID: string, email: string, mailmerge: any) => {
-  const existingFile = readLog(mailingListID);
-
-  const emails = JSON.parse(existingFile).emails || [];
-  const mailmerges = JSON.parse(existingFile).mailmerges || [];
-
-  const index = emails.indexOf(email);
-
-  if (index === -1) {
-    emails.push(email);
-    mailmerges.push(mailmerge || {});
-  } else {
-    mailmerges[index] = mailmerge || {};
-  }
-
-  const message = JSON.stringify({
-    timestamp: new Date().toString(),
-    emails: emails,
-    mailmerges: mailmerges,
-    id: mailingListID,
-  }, null, 2);
-
-  try {
-    fs.writeFileSync(getMailingListLogFileName(mailingListID), message);
-  } catch (err) {
-    throw new InternalServerError('Unable to mock sync mailing lists email: ' + err);
-  }
-
-  return okResponse;
+export const mockGetMailingListSubscriptions = async (mailingListID: number) => {
+    return readMailingList(mailingListID);
 };
 
-/**
- * Deletes subscription from dev mailing list
- * @param mailingListID
- * @param email
- */
-export const mockDeleteSubscription = async (mailingListID: string, email: string) => {
-  const existingFile = readLog(mailingListID);
+export const mockCreateSubscriber = async (userEmail: string, name: string) => {
+    const subscribers = readSubscribers();
+    const existingSubscriber = subscribers.find(s => s.email === userEmail);
+    if (existingSubscriber) {
+        return existingSubscriber.id;
+    }
+    const newId = subscribers.length > 0 ? Math.max(...subscribers.map(s => s.id)) + 1 : 1;
+    const now = new Date().toISOString();
+    const newSubscriber: MockSubscriber = {
+        id: newId,
+        uuid: randomUUID(),
+        created_at: now,
+        updated_at: now,
+        email: userEmail,
+        name: name,
+        attribs: {},
+        lists: [],
+        status: 'enabled'
+    };
+    subscribers.push(newSubscriber);
+    writeSubscribers(subscribers);
+    return newId;
+}
 
-  const emails = JSON.parse(existingFile).emails;
-  const mailmerges = JSON.parse(existingFile).mailmerges;
+export const mockGetSubscriberInfo = async (subscriberID: number) => {
+    const subscribers = readSubscribers();
+    const subscriber = subscribers.find(s => s.id === subscriberID);
+    if (!subscriber) {
+        return undefined;
+    }
 
-  if (emails.indexOf(email) !== -1) {
-    const index = emails.indexOf(email);
-    emails.splice(index, 1);
-    mailmerges.splice(index, 1);
-  }
+    return {
+        ...subscriber,
+        lists: subscriber.lists.map(listId => ({ id: listId }))
+    };
+}
 
-  const message = JSON.stringify({
-    timestamp: new Date().toString(),
-    emails: emails,
-    mailmerges: mailmerges,
-    id: mailingListID,
-  }, null, 2);
+export const mockUpdateSubscriber = async (subscriberID: number, email: string, name:string, attributes: any, lists: number[]) => {
+    const subscribers = readSubscribers();
+    const subscriberIndex = subscribers.findIndex(s => s.id === subscriberID);
+    if (subscriberIndex === -1) {
+        throw new InternalServerError(`Unable to update mock subscriber: subscriber with ID ${subscriberID} not found`);
+    }
 
-  try {
-    fs.writeFileSync(getMailingListLogFileName(mailingListID), message);
-  } catch (err) {
-    throw new InternalServerError('Unable to mock sync mailing lists email: ' + err);
-  }
+    subscribers[subscriberIndex] = {
+        ...subscribers[subscriberIndex],
+        email,
+        name,
+        attribs: attributes,
+        lists,
+        updated_at: new Date().toISOString(),
+    };
+    writeSubscribers(subscribers);
+}
 
-  return okResponse;
-};
+export const mockAddSubscriptions = async (mailingListID: string | number, subscriberIDs: number[]) => {
+    const listId = typeof mailingListID === 'string' ? parseInt(mailingListID) : mailingListID;
+    
+    let list = readMailingList(listId);
+    subscriberIDs.forEach(id => {
+        if (!list.includes(id)) {
+            list.push(id);
+        }
+    });
+    writeMailingList(listId, list);
+
+    const subscribers = readSubscribers();
+    subscriberIDs.forEach(id => {
+        const subscriber = subscribers.find(s => s.id === id);
+        if (subscriber && !subscriber.lists.includes(listId)) {
+            subscriber.lists.push(listId);
+        }
+    });
+    writeSubscribers(subscribers);
+
+    return { data: true };
+}
+
+export const mockDeleteSubscriptions = async (mailingListID: string | number, subscriberIDs: number[]) => {
+    const listId = typeof mailingListID === 'string' ? parseInt(mailingListID) : mailingListID;
+    
+    let list = readMailingList(listId);
+    list = list.filter(id => !subscriberIDs.includes(id));
+    writeMailingList(listId, list);
+
+    const subscribers = readSubscribers();
+    subscriberIDs.forEach(id => {
+        const subscriber = subscribers.find(s => s.id === id);
+        if (subscriber) {
+            subscriber.lists = subscriber.lists.filter(l => l !== listId);
+        }
+    });
+    writeSubscribers(subscribers);
+
+    return { data: true };
+}
+
+export const mockGetSubscriberIdByEmail = async (email: string): Promise<number | null> => {
+    const subscribers = readSubscribers();
+    const subscriber = subscribers.find(s => s.email === email);
+    return subscriber ? subscriber.id : null;
+}

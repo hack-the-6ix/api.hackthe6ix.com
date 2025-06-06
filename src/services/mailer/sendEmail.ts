@@ -10,7 +10,7 @@ import { sendEmailRequest } from './util/listmonk';
  */
 export default async (subscriberID: number, templateID: number, additional_data?: { [key: string]: string }) => {
 
-  const result = await sendEmailRequest(subscriberID, templateID, additional_data); 
+  const result = await sendEmailRequest(subscriberID, templateID, additional_data);
 
   if (result.status != 200 || !result.data) {
     throw new InternalServerError('Unable to send email');
