@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/hack-the-6ix/hackthe6ix-backend#readme",
   "dependencies": {
+    "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.31",
     "@azure/storage-blob": "^12.27.0",
-    "@google-cloud/opentelemetry-cloud-trace-exporter": "^2.4.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/instrumentation": "^0.202.0",
     "@opentelemetry/instrumentation-express": "^0.51.0",
