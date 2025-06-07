@@ -40,6 +40,7 @@ jobs:
           push: true
           tags: |
             ${{ vars.REGISTRY_REPO_PATH }}:latest
+            ${{ vars.REGISTRY_REPO_PATH }}:${{ github.sha }}
 
       # Clean up cache
       - name: Move cache
@@ -48,11 +49,18 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   deploy:
-    uses: ./.github/workflows/deploy-kubernetes.yml
-    needs: build
-    with:
-      environment: production
-      environment_host: api.hackthe6ix.com
-      values_file: production
-      release_name: production
-    secrets: inherit
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: api.hackthe6ix.com
+    steps:
+    - name: Log in to Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Deploy Container App
+      uses: azure/cli@v2
+      with:
+        azcliversion: 2.74.0
+        inlineScript: |
+          az containerapp update -n ${{ vars.CONTAINER_APP_NAME }} -g ${{ vars.CONTAINER_APP_RESOURCE_GROUP }} –image ${{ vars.REGISTRY_REPO_PATH }}:${{ github.sha }}
