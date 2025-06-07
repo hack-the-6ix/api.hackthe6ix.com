@@ -65,4 +65,4 @@ jobs:
         azcliversion: 2.74.0
         inlineScript: |
           az containerapp update -o none -n ${{ vars.CONTAINER_APP_NAME }} -g ${{ vars.CONTAINER_APP_RESOURCE_GROUP }} \
-            -–image ${{ vars.REGISTRY_REPO_PATH }}:${{ github.sha }}
+            --image ${{ vars.REGISTRY_REPO_PATH }}:${{ github.sha }}
