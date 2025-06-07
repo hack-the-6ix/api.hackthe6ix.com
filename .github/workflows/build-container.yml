@@ -58,8 +58,7 @@ jobs:
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Azure CLI script
+    - name: Deploy Container App
       uses: azure/cli@v2
       with:
         azcliversion: 2.74.0
