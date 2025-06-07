@@ -1,11 +1,7 @@
 export enum MailTemplate {
-  applicationIncomplete = 'applicationIncomplete',
   applied = 'applied',
   confirmed = 'confirmed',
-  declined = 'declined',
-  accepted = 'accepted',
-  rejected = 'rejected',
-  waitlisted = 'waitlisted'
+  declined = 'declined'
 }
 
 export enum MailingList {
