@@ -140,7 +140,7 @@ export const handleCallback = async (providerName: string, code: string, stateTe
     };
   } catch (err: any) {
     if (err.output?.statusCode === 400) {
-      throw new ForbiddenError('Invalid code.', err, false);
+      throw new ForbiddenError('Invalid code.', err.output?.payload, false);
     } else {
       throw new InternalServerError('Unable to initialize the login provider.', err, false);
     }
