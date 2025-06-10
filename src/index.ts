@@ -46,7 +46,6 @@ app.use(fileUpload({
   limits: { fileSize: 5000001 },
 }));
 
-
 app.use('/api', apiRouter);
 app.use('/api/action', actionRouter);
 app.use('/auth', authRouter);

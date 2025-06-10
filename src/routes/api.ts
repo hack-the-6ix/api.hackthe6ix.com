@@ -25,8 +25,6 @@ import { SystemBlobContainer } from '../services/azureBlobStorage';
 
 const apiRouter = express.Router();
 
-apiRouter.use(express.json());
-
 /**
  * (Organizer)
  *
