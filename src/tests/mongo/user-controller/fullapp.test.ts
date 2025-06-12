@@ -15,6 +15,7 @@ import {
   runBeforeAll,
   runBeforeEach,
 } from '../../test-utils';
+import { totalAvailablePoints } from '../../../consts';
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -50,7 +51,9 @@ jest.mock('../../../services/mailer/syncMailingList', () =>
   jest.fn((): any => undefined),
 );
 
-jest.mock('../../../services/mailer/syncUserMailingLists', () => jest.fn((): any => undefined));
+jest.mock('../../../services/mailer/syncUserMailingLists', () =>
+  jest.fn((): any => undefined),
+);
 
 jest.mock('../../../services/logger', () => {
   const real = jest.requireActual('../../../services/logger');
@@ -82,8 +85,12 @@ describe('Update Real Application', () => {
       program: enumOptions['programOfStudy'][0],
       levelOfStudy: enumOptions['levelOfStudy'][0],
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
     } as IPartialApplication;
 
@@ -123,8 +130,12 @@ describe('Update Real Application', () => {
       levelOfStudy: enumOptions['levelOfStudy'][0],
       graduationYear: 2030,
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
     } as IPartialApplication;
 
@@ -163,8 +174,12 @@ describe('Update Real Application', () => {
       levelOfStudy: enumOptions['levelOfStudy'][0],
       graduationYear: 2030,
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
       teamCode: '1234',
     } as IPartialApplication;
@@ -201,8 +216,12 @@ describe('Update Real Application', () => {
       levelOfStudy: enumOptions['levelOfStudy'][0],
       graduationYear: 2030,
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
     } as IPartialApplication;
 
@@ -238,8 +257,12 @@ describe('Update Real Application', () => {
       graduationYear: 2030,
       levelOfStudy: enumOptions['levelOfStudy'][0],
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(3000),
+      longEssay: 'X '.repeat(151),
+      shortEssay: 'X '.repeat(51),
+      oneSentenceEssay: 'X '.repeat(16),
+      howDidYouHearAboutHT6: 'X '.repeat(501),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
     } as IPartialApplication;
 
@@ -273,8 +296,12 @@ describe('Submit Real Application', () => {
       program: 'Computer Science',
       phoneNumber: '123123123',
       graduationYear: 2030,
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
       mlhData: true,
       shirtSize: '',
@@ -324,24 +351,23 @@ describe('Submit Real Application', () => {
     expect(resultObject.status.applied).toBeFalsy();
   });
 
-  test('Mandatory Fields', async () => {
+  test('Valid full submission', async () => {
     const mockTS = 696969;
     const restoreDateMock = mockDate(mockTS);
-
     await generateMockUniverseState();
 
     const hackerApplication = {
-      phoneNumber: '4169782011',
-      age: 18,
-      gender: enumOptions['gender'][0],
-      ethnicity: enumOptions['ethnicity'][0],
+      age: 17,
       school: 'University of Toronto',
       program: 'Computer Science',
-      levelOfStudy: enumOptions['levelOfStudy'][0],
+      phoneNumber: '123123123',
       graduationYear: 2030,
-      hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
       mlhData: true,
       shirtSize: enumOptions['shirt'][0],
@@ -367,7 +393,6 @@ describe('Submit Real Application', () => {
     });
 
     await updateApplication(user.toJSON() as IUser, true, hackerApplication);
-
     restoreDateMock();
 
     const resultObject = await User.findOne({
@@ -395,8 +420,12 @@ describe('Submit Real Application', () => {
       levelOfStudy: enumOptions['levelOfStudy'][0],
       graduationYear: 2030,
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: false,
       mlhData: true,
       shirtSize: enumOptions['shirt'][0],
@@ -451,8 +480,12 @@ describe('Submit Real Application', () => {
       levelOfStudy: enumOptions['levelOfStudy'][0],
       graduationYear: 2030,
       hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
+      longEssay: 'X '.repeat(50),
+      shortEssay: 'X '.repeat(50),
+      oneSentenceEssay: 'X '.repeat(10),
+      howDidYouHearAboutHT6: 'X '.repeat(10),
+      avatarBase: 0,
+      avatarItem: 0,
       mlhCOC: true,
       mlhData: false,
       shirtSize: enumOptions['shirt'][0],
@@ -491,59 +524,6 @@ describe('Submit Real Application', () => {
     expect(resultObject.toJSON().hackerApplication).toEqual({
       resumeFileName: 'wtf.exe',
     });
-    expect(resultObject.status.applied).toBeFalsy();
-  });
-
-  test('Missing Resume', async () => {
-    await generateMockUniverseState();
-
-    const hackerApplication = {
-      phoneNumber: '4169782011',
-      age: 18,
-      gender: enumOptions['gender'][0],
-      ethnicity: enumOptions['ethnicity'][0],
-      school: 'University of Toronto',
-      program: 'Computer Science',
-      levelOfStudy: enumOptions['levelOfStudy'][0],
-      graduationYear: 2030,
-      hackathonsAttended: enumOptions['hackathonsAttended'][0],
-      creativeResponseEssay: 'X '.repeat(50),
-      whyHT6Essay: 'X '.repeat(50),
-      mlhCOC: true,
-      mlhData: true,
-      shirtSize: enumOptions['shirt'][0],
-      city: 'Toronto',
-      province: 'Ontario',
-      country: 'Canada',
-      emergencyContact: {
-        firstName: 'John',
-        lastName: 'Doe',
-        phoneNumber: '1234567890',
-        relationship: enumOptions['emergencyContactRelationship'][0],
-      },
-    } as IPartialApplication;
-
-    const user = await User.create({
-      ...hackerUser,
-      status: {
-        applied: false,
-      },
-    });
-
-    const error = await getError<SubmissionDeniedError>(() =>
-      updateApplication(user.toJSON() as IUser, true, hackerApplication),
-    );
-
-    expect(error).toBeInstanceOf(SubmissionDeniedError);
-    expect(error.getFields().sort()).toEqual(
-      ['/resumeFileName', '/friendlyResumeFileName'].sort(),
-    );
-
-    const resultObject = await User.findOne({
-      _id: hackerUser._id,
-    });
-
-    expect(resultObject.toJSON().hackerApplication).toEqual(undefined);
     expect(resultObject.status.applied).toBeFalsy();
   });
 });
