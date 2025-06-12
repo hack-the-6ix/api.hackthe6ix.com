@@ -364,6 +364,15 @@ export const hackerApplication = {
       submitCheck: multiInEnum(enumOptions.howDidYouHearAboutHT6),
     },
 
+    previousHT6Experience: {
+      type: [String],
+      caption:
+        'Have you previously attended or applied to Hack the 6ix? (select all that apply)',
+      writeCheck: multiInEnum(enumOptions.previousHT6Experience),
+      readCheck: true,
+      submitCheck: multiInEnum(enumOptions.previousHT6Experience),
+    },
+
     /* At HT6 */
     mlhCOC: {
       type: Boolean,
@@ -1156,6 +1165,7 @@ export interface IApplication {
   whyHT6Essay: string;
   oneSentenceEssay: string;
   howDidYouHearAboutHT6: string[];
+  previousHT6Experience: string[];
   mlhCOC: boolean;
   mlhEmail: boolean;
   mlhData: boolean;

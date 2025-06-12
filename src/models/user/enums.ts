@@ -335,10 +335,8 @@ export const enumOptions = {
   ],
   emergencyContactRelationship: [
     'Parent',
-    'Grandparent',
-    'Legal guardian',
-    'Sibling',
-    'Other family member',
+    'Guardian',
+    'Other Family Member',
     'Friend',
     'Other',
   ],
@@ -362,5 +360,11 @@ export const enumOptions = {
     'UofTHacks',
     'MasseyHacks',
     'UW Data Science Club',
+  ],
+  previousHT6Experience: [
+    "I've previously applied for Hack the 6ix",
+    "I've attended Hack the 6ix as a hacker",
+    "I've attended Hack the 6ix as a volunteer",
+    "I've attended Hack the 6ix as a mentor or workshop host",
   ],
 };
