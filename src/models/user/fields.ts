@@ -20,6 +20,7 @@ import {
 } from '../validator';
 import { enumOptions } from './enums';
 import { maskStatus } from './interceptors';
+import { multiInEnum } from '../validator';
 
 // Hacker emergency contact info
 export const emergencyContact = {
@@ -110,9 +111,9 @@ export const hackerApplication = {
       readCheck: true,
     },
 
-    age:{
+    age: {
       type: Number,
-      caption: 'Age by August 2nd',
+      caption: 'Current age',
       inTextSearch: true,
 
       writeCheck: true,
@@ -187,14 +188,30 @@ export const hackerApplication = {
       inTextSearch: true,
 
       writeCheck: (request: WriteCheckRequest<string, IUser>) =>
-        minLength(1)(request) && maxLength(256)(request),
+        maxLength(256)(request),
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
-        minLength(1)(request) && maxLength(256)(request),
+        maxLength(256)(request),
       readCheck: true,
     },
 
     /* Emergency Contact Info */
     emergencyContact: emergencyContact,
+
+    /* Avatars */
+    avatarBase: {
+      type: Number,
+      caption: 'Avatar Base',
+      writeCheck: true,
+      submitCheck: withinInt(0, 5),
+      readCheck: true,
+    },
+    avatarItem: {
+      type: Number,
+      caption: 'Avatar Item',
+      writeCheck: true,
+      submitCheck: withinInt(0, 2),
+      readCheck: true,
+    },
 
     /* Your experience */
     school: {
@@ -313,24 +330,38 @@ export const hackerApplication = {
 
     creativeResponseEssay: {
       type: String,
-      caption: 'Technology/Innovation Essay',
-      inTextSearch: true,
-
-      writeCheck: maxLength(2056),
-      submitCheck: (request: WriteCheckRequest<string, IUser>) =>
-        minWordLength(50)(request) && maxWordLength(200)(request),
+      caption: 'Creative Response',
+      writeCheck: maxLength(1000),
       readCheck: true,
+      submitCheck: (request: WriteCheckRequest<string, IUser>) =>
+        minLength(1)(request) && maxLength(1000)(request),
     },
 
     whyHT6Essay: {
       type: String,
-      caption: 'Why HT6 Essay',
-      inTextSearch: true,
-
-      writeCheck: maxLength(2056),
-      submitCheck: (request: WriteCheckRequest<string, IUser>) =>
-        minWordLength(50)(request) && maxWordLength(200)(request),
+      caption: 'Why do you want to attend Hack the 6ix?',
+      writeCheck: maxLength(1000),
       readCheck: true,
+      submitCheck: (request: WriteCheckRequest<string, IUser>) =>
+        minLength(1)(request) && maxLength(1000)(request),
+    },
+
+    oneSentenceEssay: {
+      type: String,
+      caption:
+        'Tell us about something you made or worked on (in one sentence!)',
+      writeCheck: maxLength(100),
+      readCheck: true,
+      submitCheck: (request: WriteCheckRequest<string, IUser>) =>
+        minLength(1)(request) && maxLength(100)(request),
+    },
+
+    howDidYouHearAboutHT6: {
+      type: [String],
+      caption: 'Where did you hear about Hack the 6ix?',
+      writeCheck: multiInEnum(enumOptions.howDidYouHearAboutHT6),
+      readCheck: true,
+      submitCheck: multiInEnum(enumOptions.howDidYouHearAboutHT6),
     },
 
     /* At HT6 */
@@ -417,7 +448,7 @@ const internal = {
       readCheck: true,
 
       FIELDS: {
-        whyHT6: {
+        longEssay: {
           writeCheck: true,
           readCheck: true,
 
@@ -437,7 +468,27 @@ const internal = {
           },
         },
 
-        creativeResponse: {
+        shortEssay: {
+          writeCheck: true,
+          readCheck: true,
+
+          FIELDS: {
+            score: {
+              type: Number,
+              default: -1,
+              writeCheck: true,
+              readCheck: true,
+            },
+
+            reviewer: {
+              type: String,
+              writeCheck: true,
+              readCheck: true,
+            },
+          },
+        },
+
+        oneSentenceEssay: {
           writeCheck: true,
           readCheck: true,
 
@@ -1039,11 +1090,15 @@ export interface IUser extends BasicUser {
     computedApplicationScore?: number;
     computedFinalApplicationScore?: number; // This value is added by get-rank and usually isn't populated
     applicationScores?: {
-      creativeResponse: {
+      longEssay: {
         score: number;
         reviewer: string;
       };
-      whyHT6: {
+      shortEssay: {
+        score: number;
+        reviewer: string;
+      };
+      oneSentenceEssay: {
         score: number;
         reviewer: string;
       };
@@ -1099,6 +1154,8 @@ export interface IApplication {
   linkedinLink: string;
   creativeResponseEssay: string;
   whyHT6Essay: string;
+  oneSentenceEssay: string;
+  howDidYouHearAboutHT6: string[];
   mlhCOC: boolean;
   mlhEmail: boolean;
   mlhData: boolean;
@@ -1108,6 +1165,8 @@ export interface IApplication {
     phoneNumber: string;
     relationship: string;
   };
+  avatarBase: number;
+  avatarItem: number;
 }
 
 export type IPartialApplication = Partial<IApplication>;

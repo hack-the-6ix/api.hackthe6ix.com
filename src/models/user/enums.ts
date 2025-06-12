@@ -314,7 +314,7 @@ export const enumOptions = {
     "I'm not currently a student",
     'Prefer not to answer',
   ],
-  hackathonsAttended: ['None','1-3', '4-6', '7-9', '10+'],
+  hackathonsAttended: ['None', '1-3', '4-6', '7-9', '10+'],
   requestedWorkshops: [
     'APIs 101',
     'Basics of Python',
@@ -349,5 +349,18 @@ export const enumOptions = {
     'Kosher',
     'Halal',
     'Allergies / Other',
+  ],
+  howDidYouHearAboutHT6: [
+    'Instagram',
+    'Discord',
+    'Website',
+    'Email',
+    'LinkedIn',
+    'Word of mouth',
+    'JamHacks',
+    'GeeseHacks',
+    'UofTHacks',
+    'MasseyHacks',
+    'UW Data Science Club',
   ],
 };
