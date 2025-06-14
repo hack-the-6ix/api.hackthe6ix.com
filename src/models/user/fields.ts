@@ -330,8 +330,9 @@ export const hackerApplication = {
 
     creativeResponseEssay: {
       type: String,
-      caption: 'Creative Response',
-      writeCheck: maxLength(1000),
+      caption:
+        'Tell us about a project you’ve enjoyed working on (this can be non-technical!). What made you decide to work on this project? What challenges did you face and how did you overcome them?',
+      writeCheck: maxLength(3000),
       readCheck: true,
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
         minLength(1)(request) && maxLength(1000)(request),
@@ -339,7 +340,8 @@ export const hackerApplication = {
 
     whyHT6Essay: {
       type: String,
-      caption: 'Why do you want to attend Hack the 6ix?',
+      caption:
+        'If you could not do anything related to school, work, or coding for 4 months, what would you do and why?',
       writeCheck: maxLength(1000),
       readCheck: true,
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
@@ -349,11 +351,11 @@ export const hackerApplication = {
     oneSentenceEssay: {
       type: String,
       caption:
-        'Tell us about something you made or worked on (in one sentence!)',
+        'You are given an elephant. You cannot sell or give away the elephant. What do you do with the elephant?',
       writeCheck: maxLength(100),
       readCheck: true,
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
-        minLength(1)(request) && maxLength(100)(request),
+        minLength(1)(request) && maxLength(500)(request),
     },
 
     howDidYouHearAboutHT6: {
