@@ -335,7 +335,7 @@ export const hackerApplication = {
       writeCheck: maxLength(3000),
       readCheck: true,
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
-        minLength(1)(request) && maxLength(1000)(request),
+        minLength(1)(request) && maxLength(3000)(request),
     },
 
     whyHT6Essay: {
@@ -352,7 +352,7 @@ export const hackerApplication = {
       type: String,
       caption:
         'You are given an elephant. You cannot sell or give away the elephant. What do you do with the elephant?',
-      writeCheck: maxLength(100),
+      writeCheck: maxLength(500),
       readCheck: true,
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
         minLength(1)(request) && maxLength(500)(request),
