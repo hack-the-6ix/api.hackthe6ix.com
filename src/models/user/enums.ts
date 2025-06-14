@@ -360,6 +360,7 @@ export const enumOptions = {
     'UofTHacks',
     'MasseyHacks',
     'UW Data Science Club',
+    'Other',
   ],
   previousHT6Experience: [
     "I've previously applied for Hack the 6ix",
