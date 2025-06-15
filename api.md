@@ -804,7 +804,7 @@ ones and the dictionary will be merged (so omitted fields are unchanged).
 ```
 {
   "candidateID": <id of user to grade>,
-   "grades": {
+   "grade": {
      <category name>: <grade to assign the user>,
      ... // multiple categories can be graded simultaneously, if needed
    }
