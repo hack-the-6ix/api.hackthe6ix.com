@@ -209,7 +209,7 @@ export const hackerApplication = {
       type: Number,
       caption: 'Avatar Item',
       writeCheck: true,
-      submitCheck: withinInt(0, 2),
+      submitCheck: withinInt(1, 3),
       readCheck: true,
     },
 
