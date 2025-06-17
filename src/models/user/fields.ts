@@ -331,7 +331,7 @@ export const hackerApplication = {
     creativeResponseEssay: {
       type: String,
       caption:
-        'Tell us about a project you’ve enjoyed working on (this can be non-technical!). What made you decide to work on this project? What challenges did you face and how did you overcome them?',
+        "Tell us about a project you've enjoyed working on (this can be non-technical!). What made you decide to work on this project? What challenges did you face and how did you overcome them?",
       writeCheck: maxLength(3000),
       readCheck: true,
       submitCheck: (request: WriteCheckRequest<string, IUser>) =>
@@ -402,6 +402,14 @@ export const hackerApplication = {
       submitCheck: (request: WriteCheckRequest<boolean, IUser>) =>
         request.fieldValue,
       readCheck: true,
+    },
+
+    requestedWorkshops: {
+      type: [String],
+      caption: 'Requested Workshops',
+      writeCheck: multiInEnum(enumOptions.requestedWorkshops),
+      readCheck: true,
+      submitCheck: multiInEnum(enumOptions.requestedWorkshops),
     },
   },
 };
@@ -1171,6 +1179,7 @@ export interface IApplication {
   mlhCOC: boolean;
   mlhEmail: boolean;
   mlhData: boolean;
+  requestedWorkshops?: string[];
   emergencyContact: {
     firstName: string;
     lastName: string;
