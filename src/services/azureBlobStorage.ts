@@ -90,6 +90,8 @@ export function generateDownloadPresignedUrl(containerName: SystemBlobContainer,
     permissions: BlobSASPermissions.parse('r'), // Read permission
     startsOn: new Date(),
     expiresOn: new Date(new Date().valueOf() + expiresInMinutes * 60 * 1000),
+    contentDisposition: 'inline',
+    contentType: 'application/pdf',
   };
   
   // Generate SAS token
