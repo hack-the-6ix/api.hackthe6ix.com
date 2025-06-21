@@ -570,6 +570,14 @@ Trigger a mailing list sync with ListMonk.
 
 Trigger a mailing list sync with ListMonk for a particular user.
 
+#### Input Specification
+
+```
+{
+  userID: <user ID of the user>,
+}
+```
+
 #### Output Specification
 
 ```
