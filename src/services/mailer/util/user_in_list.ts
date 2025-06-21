@@ -32,6 +32,8 @@ export default (u: IUser, filterQuery: any) => {
         return true;
       }
     }
+
+    return false;
   }
 
   return evaluateInnerQuery(u, filterQuery);
