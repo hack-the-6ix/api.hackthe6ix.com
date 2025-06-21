@@ -34,14 +34,14 @@ import {
   disassociateFromDiscord,
   addCheckInNotes,
   removeCheckInNotes,
-  getResumeURL
+  getResumeURL,
+  syncUserMailingListsByID
 } from '../controller/UserController';
 import { logResponse } from '../services/logger';
 import sendAllTemplates from '../services/mailer/sendAllTemplates';
 import sendTemplateEmail from '../services/mailer/sendTemplateEmail';
 import syncMailingLists from '../services/mailer/syncMailingLists';
 import verifyMailingList from '../services/mailer/verifyMailingList';
-import {mongoose} from '../services/mongoose_service';
 import {isAdmin, isAuthenticated, isHacker, isOrganizer, isVolunteer} from '../services/permissions';
 import { getStatistics } from '../services/statistics';
 import {generateDiscordOAuthUrl} from "../services/discordApi";
@@ -308,6 +308,23 @@ actionRouter.post('/syncMailingLists', isOrganizer, (req: Request, res: Response
     true,
   );
 });
+
+/**
+ * (Admin)
+ *
+ * Sync user mailing lists
+ */
+actionRouter.post('/syncUserMailingLists', isOrganizer, (req: Request, res: Response) => {
+  logResponse(
+    req,
+    res,
+    syncUserMailingListsByID(
+      req.body.userID,
+    ),
+    true,
+  );
+});
+
 
 /**
  * (Admin)

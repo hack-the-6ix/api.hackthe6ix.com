@@ -94,7 +94,8 @@ export const updateSubscriberRequest = async (subscriberID: number, email: strin
         lists: lists,
         email: email,
         name: name,
-        attribs: attributes
+        attribs: attributes,
+        preconfirm_subscriptions: true
     };
 
     const res = await listmonk.put(`/subscribers/${subscriberID}`, updateObject);
