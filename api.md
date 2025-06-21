@@ -543,17 +543,13 @@ This will also update the cache, which by default has a lifetime of 5 minutes.
 
 `/api/action/syncMailingLists`
 
-Trigger a mailing list sync with Mailtrain. If `forceUpdate` is enabled, all users
-eligible for a mailing list will be sent to mailtrain, even if they are already synced, to ensure all tags
-are updated too.
+Trigger a mailing list sync with ListMonk.
 
 #### Input Specification
 
 ```
 {
   mailingList: <array of name of mailing list to sync> (all if omitted),
-  forceUpdate: true | false,
-  email: <if specified, only changes will be made to this address>
 }
 ```
 
@@ -562,16 +558,35 @@ are updated too.
 ```
 {
   status: 200,
-  message: {
-    added: [
-      ... emails that were sent to mailtrain to be added/updated
-    ],
-    deleted: [
-      ... emails removed from mailing list
-    ]
-   }
+  message: [
+    ... // list of all mailing lists synced
+  ]
 }
 ```
+
+### POST - Sync User Mailing Lists
+
+`/api/action/syncUserMailingLists`
+
+Trigger a mailing list sync with ListMonk for a particular user.
+
+#### Input Specification
+
+```
+{
+  userID: <user ID of the user>,
+}
+```
+
+#### Output Specification
+
+```
+{
+  status: 200,
+  message: "Success"
+}
+```
+
 
 ### POST - Verify Mailing List
 
@@ -600,7 +615,7 @@ The request user's mail merge will be used for all of the test users.
 
 `/api/action/sendEmail`
 
-Send an email to a user using the Mailtrain transactional API. If `email` corresponds to a user registered
+Send an email to a user using the ListMonk transactional API. If `email` corresponds to a user registered
 in the system, tags will automatically be injected with information such as application deadline, confirmation deadline, etc.
 
 #### Input Specification

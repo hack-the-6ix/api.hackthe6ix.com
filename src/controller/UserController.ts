@@ -1035,3 +1035,15 @@ export const registerUserMailingSubscriberID = async (
 
   return user.mailingListSubcriberID;
 };
+
+export const syncUserMailingListsByID = async (userID: string) => {
+  const user = await User.findById(userID);
+
+  if (!user) {
+    throw new NotFoundError('Unable to find user with the given ID.');
+  }
+
+  await syncUserMailingLists(user);
+
+  return 'Success';
+};
