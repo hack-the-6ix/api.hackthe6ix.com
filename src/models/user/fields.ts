@@ -422,7 +422,6 @@ const rsvpForm = {
       type: [String],
       default: [] as string[],
       caption: 'Selected companies',
-
       writeCheck: true,
       readCheck: true,
     },
@@ -430,6 +429,19 @@ const rsvpForm = {
       type: Boolean,
       default: false,
       caption: 'In person RSVP reminder',
+      writeCheck: true,
+      readCheck: true,
+    },
+    waiverAgreed: {
+      type: Boolean,
+      default: false,
+      caption: 'Waiver Agreed',
+      writeCheck: true,
+      readCheck: true,
+    },
+    age: {
+      type: Number,
+      caption: 'Age',
       writeCheck: true,
       readCheck: true,
     },
@@ -1195,4 +1207,6 @@ export type IPartialApplication = Partial<IApplication>;
 export interface IRSVPForm {
   selectedCompanies?: string[];
   remindInPersonRSVP?: boolean;
+  waiverAgreed?: boolean;
+  age?: number;
 }
