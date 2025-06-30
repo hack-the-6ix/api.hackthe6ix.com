@@ -39,7 +39,7 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
             applicationScores: {
               creativeResponse: 0,
               whyHT6: 0,
-              project: 0,
+              elphantQuestion: 0,
               portfolio: 0,
             },
             reviewers: {},
@@ -159,14 +159,16 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
         }
 
         // Individual questions
-        if (user?.internal?.applicationScores?.creativeResponse?.score >= 0) {
-          statistics.hacker.submittedApplicationStats.review.applicationScores.creativeResponse++;
+        if (user?.internal?.applicationScores?.longEssay?.score >= 0) {
+          statistics.hacker.submittedApplicationStats.review.applicationScores
+            .creativeResponse++;
         }
-        if (user?.internal?.applicationScores?.whyHT6?.score >= 0) {
+        if (user?.internal?.applicationScores?.shortEssay?.score >= 0) {
           statistics.hacker.submittedApplicationStats.review.applicationScores.whyHT6++;
         }
-        if (user?.internal?.applicationScores?.project?.score >= 0) {
-          statistics.hacker.submittedApplicationStats.review.applicationScores.project++;
+        if (user?.internal?.applicationScores?.oneSentenceEssay?.score >= 0) {
+          statistics.hacker.submittedApplicationStats.review.applicationScores
+            .elphantQuestion++;
         }
         if (user?.internal?.applicationScores?.portfolio?.score >= 0) {
           statistics.hacker.submittedApplicationStats.review.applicationScores.portfolio++;
@@ -274,7 +276,7 @@ export type IStatistics = {
         applicationScores: {
           creativeResponse: number,
           whyHT6: number,
-          project: number,
+          elphantQuestion: number,
           portfolio: number
         },
         reviewers: any
