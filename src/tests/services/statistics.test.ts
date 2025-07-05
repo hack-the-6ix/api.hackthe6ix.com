@@ -10,7 +10,7 @@ import {
   runBeforeAll,
   runBeforeEach,
 } from '../test-utils';
-import {totalAvailablePoints} from "../../consts";
+import { totalAvailablePoints } from '../../consts';
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -29,12 +29,10 @@ beforeEach(runBeforeEach);
  */
 afterAll(runAfterAll);
 
-jest.mock('../../controller/util/resources', () => (
-  {
-    ...jest.requireActual('../../controller/util/resources'),
-    getModels: jest.fn(),
-  }
-));
+jest.mock('../../controller/util/resources', () => ({
+  ...jest.requireActual('../../controller/util/resources'),
+  getModels: jest.fn(),
+}));
 
 const generateMockusersA = async () => {
   await User.create({
@@ -89,11 +87,13 @@ const generateUsersFromTestCase = async (cases: any[]) => {
     const payload = cases[j] as any;
 
     for (let i = 0; i <= j; i++) {
-      promises.push(User.create({
-        ...hackerUser,
-        _id: new mongoose.Types.ObjectId(),
-        ...payload,
-      }));
+      promises.push(
+        User.create({
+          ...hackerUser,
+          _id: new mongoose.Types.ObjectId(),
+          ...payload,
+        }),
+      );
     }
   }
   await Promise.all(promises);
@@ -166,7 +166,6 @@ describe('Get statistics', () => {
     });
 
     describe('Status', () => {
-
       test('Main status', async () => {
         // Okay yes this is a bit sketchy, but it works
         const statuses = [
@@ -185,19 +184,20 @@ describe('Get statistics', () => {
         const promises: any[] = [];
 
         for (let i = 0; i < statuses.length; i++) {
-
           const status: any = {};
           status[statuses[i]] = true;
 
           for (let k = 0; k < i; k++) {
-            promises.push(User.create({
-              ...hackerUser,
-              _id: new mongoose.Types.ObjectId(),
-              status: {
-                ...status,
-                statusReleased: true,
-              },
-            }));
+            promises.push(
+              User.create({
+                ...hackerUser,
+                _id: new mongoose.Types.ObjectId(),
+                status: {
+                  ...status,
+                  statusReleased: true,
+                },
+              }),
+            );
           }
 
           expectedStatus[statuses[i]] = i;
@@ -228,16 +228,20 @@ describe('Get statistics', () => {
     });
 
     test('Gender', async () => {
-      const cases = ['Male', 'Female', 'Other', 'Non-Binary', 'Prefer not to say'].map((x) => (
-        {
-          hackerApplication: {
-            gender: x,
-          },
-          status: {
-            applied: true,
-          },
-        }
-      ));
+      const cases = [
+        'Male',
+        'Female',
+        'Other',
+        'Non-Binary',
+        'Prefer not to say',
+      ].map((x) => ({
+        hackerApplication: {
+          gender: x,
+        },
+        status: {
+          applied: true,
+        },
+      }));
 
       // Make sure we only consider applied users
       cases.push({
@@ -261,38 +265,31 @@ describe('Get statistics', () => {
     });
 
     test('Grade Distribution', async () => {
-
       const cases = [
-        { // Partially completed
+        {
+          // Partially completed
           status: { applied: true },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: -1,
               },
-              whyHT6: {
+              shortEssay: {
                 score: 100,
-              },
-              project: {
-                score: 101,
-                reviewer: 'barfoo',
               },
             },
           },
         },
-        { // complete
+        {
+          // complete
           status: { applied: true },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: 100,
               },
-              whyHT6: {
+              shortEssay: {
                 score: 100,
-              },
-              project: {
-                score: 101,
-                reviewer: 'barfoo',
               },
               portfolio: {
                 score: 101,
@@ -301,17 +298,15 @@ describe('Get statistics', () => {
             },
           },
         },
-        { // not even touched
+        {
+          // not even touched
           status: { applied: true },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: -1,
               },
-              whyHT6: {
-                score: -1,
-              },
-              project: {
+              shortEssay: {
                 score: -1,
               },
             },
@@ -323,16 +318,12 @@ describe('Get statistics', () => {
       const statistics = await getStatistics(true);
 
       expect(statistics.gradeDistribution).toEqual({
-        creativeResponse: {
+        longEssay: {
           100: 2,
           '-1': 4,
         },
-        whyHT6: {
+        shortEssay: {
           100: 3,
-          '-1': 3,
-        },
-        project: {
-          101: 3,
           '-1': 3,
         },
         portfolio: {
@@ -341,17 +332,12 @@ describe('Get statistics', () => {
         },
         overall: {
           '-1': 4,
-          [Math.round(402/totalAvailablePoints.normal * 100)]: 2,
+          [Math.round((402 / totalAvailablePoints.normal) * 100)]: 2,
         },
       });
-
     });
     test('Summary Statistics', async () => {
-      const [DAY1, DAY2, DAY3] = [
-        18000000,
-        104400000,
-        190800000,
-      ];
+      const [DAY1, DAY2, DAY3] = [18000000, 104400000, 190800000];
 
       const cases = [
         {
@@ -433,8 +419,7 @@ describe('Get statistics', () => {
           },
         },
         {
-          hackerApplication: {
-          },
+          hackerApplication: {},
           status: {
             applied: true,
           },
@@ -471,40 +456,33 @@ describe('Get statistics', () => {
     });
 
     test('Review', async () => {
-
       const organizer = await User.create(organizerUser);
 
       const cases = [
-        { // Partially completed
+        {
+          // Partially completed
           status: { applied: true },
           internal: {
             applicationScores: {
-              whyHT6: {
+              shortEssay: {
                 score: 100,
                 reviewer: organizer._id,
-              },
-              project: {
-                score: 101,
-                reviewer: 'barfoo',
               },
             },
           },
         },
-        { // complete
+        {
+          // complete
           status: { applied: true },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: 100,
                 reviewer: organizer._id,
               },
-              whyHT6: {
+              shortEssay: {
                 score: 100,
                 reviewer: organizer._id,
-              },
-              project: {
-                score: 101,
-                reviewer: 'barfoo',
               },
               portfolio: {
                 score: 101,
@@ -513,20 +491,18 @@ describe('Get statistics', () => {
             },
           },
         },
-        { // not even touched
+        {
+          // not even touched
           status: { applied: true },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: -1,
                 reviewer: organizer._id,
               },
-              whyHT6: {
+              shortEssay: {
                 score: -1,
                 reviewer: organizer._id,
-              },
-              project: {
-                score: -1,
               },
             },
           },
@@ -541,9 +517,8 @@ describe('Get statistics', () => {
         notReviewed: 4,
         applicationScores: {
           portfolio: 2,
-          project: 3,
-          creativeResponse: 2,
-          whyHT6: 3
+          longEssay: 2,
+          shortEssay: 3,
         },
         reviewers: {
           barfoo: {
@@ -557,7 +532,9 @@ describe('Get statistics', () => {
         total: 11,
       };
 
-      expect(statistics.hacker.submittedApplicationStats.review).toEqual(expectedReviewStats);
+      expect(statistics.hacker.submittedApplicationStats.review).toEqual(
+        expectedReviewStats,
+      );
     });
   });
 });

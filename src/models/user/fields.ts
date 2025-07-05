@@ -328,7 +328,7 @@ export const hackerApplication = {
       readCheck: true,
     },
 
-    creativeResponseEssay: {
+    longEssay: {
       type: String,
       caption:
         "Tell us about a project you've enjoyed working on (this can be non-technical!). What made you decide to work on this project? What challenges did you face and how did you overcome them?",
@@ -338,7 +338,7 @@ export const hackerApplication = {
         minLength(1)(request) && maxLength(3000)(request),
     },
 
-    whyHT6Essay: {
+    shortEssay: {
       type: String,
       caption:
         'If you could not do anything related to school, work, or coding for 4 months, what would you do and why?',
@@ -520,26 +520,6 @@ const internal = {
         },
 
         oneSentenceEssay: {
-          writeCheck: true,
-          readCheck: true,
-
-          FIELDS: {
-            score: {
-              type: Number,
-              default: -1,
-              writeCheck: true,
-              readCheck: true,
-            },
-
-            reviewer: {
-              type: String,
-              writeCheck: true,
-              readCheck: true,
-            },
-          },
-        },
-
-        project: {
           writeCheck: true,
           readCheck: true,
 
@@ -1133,10 +1113,6 @@ export interface IUser extends BasicUser {
         score: number;
         reviewer: string;
       };
-      project: {
-        score: number;
-        reviewer: string;
-      };
       portfolio: {
         score: number;
         reviewer: string;
@@ -1183,8 +1159,8 @@ export interface IApplication {
   githubLink: string;
   portfolioLink: string;
   linkedinLink: string;
-  creativeResponseEssay: string;
-  whyHT6Essay: string;
+  longEssay: string;
+  shortEssay: string;
   oneSentenceEssay: string;
   howDidYouHearAboutHT6: string[];
   previousHT6Experience: string[];

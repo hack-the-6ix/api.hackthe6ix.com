@@ -22,7 +22,6 @@ export default function (this: IUser): number {
     'longEssay',
     'shortEssay',
     'oneSentenceEssay',
-    'project',
     'portfolio',
   ] as const) {
     if (
@@ -37,7 +36,6 @@ export default function (this: IUser): number {
     applicationScores.longEssay?.score +
     applicationScores.shortEssay?.score +
     applicationScores.oneSentenceEssay?.score +
-    applicationScores.project?.score +
     (!firstHackathon ? applicationScores.portfolio?.score : 0);
 
   return (

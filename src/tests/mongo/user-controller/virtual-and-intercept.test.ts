@@ -24,7 +24,7 @@ import {
   runBeforeAll,
   runBeforeEach,
 } from '../../test-utils';
-import {totalAvailablePoints} from "../../../consts";
+import { totalAvailablePoints } from '../../../consts';
 
 /**
  * Connect to a new in-memory database before running any tests.
@@ -59,8 +59,6 @@ jest.mock('../../../models/validator', () => {
 });
 
 describe('Interceptor', () => {
-
-
   describe('Status', () => {
     const baseStatus = {
       applied: true,
@@ -73,7 +71,6 @@ describe('Interceptor', () => {
     };
 
     describe('Hacker', () => {
-
       beforeEach(() => {
         canUpdateApplication.mockReturnValue(() => true);
         canRSVP.mockReturnValue(() => true);
@@ -132,13 +129,20 @@ describe('Interceptor', () => {
       expect(fetchedUser.status).toMatchObject(status);
     });
   });
-
 });
 
 describe('Virtual', () => {
   describe('Can Amend Team', () => {
-    beforeEach(() => canRSVP.mockImplementation(jest.requireActual('../../../models/validator').canRSVP));
-    beforeEach(() => canUpdateApplication.mockImplementation(jest.requireActual('../../../models/validator').canUpdateApplication));
+    beforeEach(() =>
+      canRSVP.mockImplementation(
+        jest.requireActual('../../../models/validator').canRSVP,
+      ),
+    );
+    beforeEach(() =>
+      canUpdateApplication.mockImplementation(
+        jest.requireActual('../../../models/validator').canUpdateApplication,
+      ),
+    );
 
     test('Success', async () => {
       isApplicationOpen.mockReturnValue(true);
@@ -158,7 +162,11 @@ describe('Virtual', () => {
   });
 
   describe('Can Apply', () => {
-    beforeEach(() => canRSVP.mockImplementation(jest.requireActual('../../../models/validator').canRSVP));
+    beforeEach(() =>
+      canRSVP.mockImplementation(
+        jest.requireActual('../../../models/validator').canRSVP,
+      ),
+    );
 
     test('Success', async () => {
       canUpdateApplication.mockReturnValue(true);
@@ -179,7 +187,11 @@ describe('Virtual', () => {
   });
 
   describe('Can Confirm', () => {
-    beforeEach(() => canUpdateApplication.mockImplementation(jest.requireActual('../../../models/validator').canUpdateApplication));
+    beforeEach(() =>
+      canUpdateApplication.mockImplementation(
+        jest.requireActual('../../../models/validator').canUpdateApplication,
+      ),
+    );
 
     test('Success', async () => {
       canRSVP.mockReturnValue(true);
@@ -199,7 +211,11 @@ describe('Virtual', () => {
   });
 
   describe('Is Confirmation Open', () => {
-    beforeEach(() => canUpdateApplication.mockImplementation(jest.requireActual('../../../models/validator').canUpdateApplication));
+    beforeEach(() =>
+      canUpdateApplication.mockImplementation(
+        jest.requireActual('../../../models/validator').canUpdateApplication,
+      ),
+    );
 
     test('Success', async () => {
       isRSVPOpen.mockReturnValue(true);
@@ -219,7 +235,11 @@ describe('Virtual', () => {
   });
 
   describe('RSVP Expired', () => {
-    beforeEach(() => isRSVPExpired.mockImplementation(jest.requireActual('../../../models/validator').isRSVPExpired));
+    beforeEach(() =>
+      isRSVPExpired.mockImplementation(
+        jest.requireActual('../../../models/validator').isRSVPExpired,
+      ),
+    );
 
     test('Success', async () => {
       isRSVPExpired.mockReturnValue(true);
@@ -239,7 +259,11 @@ describe('Virtual', () => {
   });
 
   describe('Application Expired', () => {
-    beforeEach(() => isApplicationExpired.mockImplementation(jest.requireActual('../../../models/validator').isApplicationExpired));
+    beforeEach(() =>
+      isApplicationExpired.mockImplementation(
+        jest.requireActual('../../../models/validator').isApplicationExpired,
+      ),
+    );
 
     test('Success', async () => {
       isApplicationExpired.mockReturnValue(true);
@@ -260,10 +284,18 @@ describe('Virtual', () => {
 
   describe('Computed Deadlines', () => {
     beforeEach(() => {
-      canUpdateApplication.mockImplementation(jest.requireActual('../../../models/validator').canUpdateApplication);
-      canRSVP.mockImplementation(jest.requireActual('../../../models/validator').canRSVP);
-      getApplicationDeadline.mockImplementation(jest.requireActual('../../../models/validator').getApplicationDeadline);
-      getRSVPDeadline.mockImplementation(jest.requireActual('../../../models/validator').getRSVPDeadline);
+      canUpdateApplication.mockImplementation(
+        jest.requireActual('../../../models/validator').canUpdateApplication,
+      );
+      canRSVP.mockImplementation(
+        jest.requireActual('../../../models/validator').canRSVP,
+      );
+      getApplicationDeadline.mockImplementation(
+        jest.requireActual('../../../models/validator').getApplicationDeadline,
+      );
+      getRSVPDeadline.mockImplementation(
+        jest.requireActual('../../../models/validator').getRSVPDeadline,
+      );
     });
 
     describe('Application', () => {
@@ -277,11 +309,13 @@ describe('Virtual', () => {
             personalApplicationDeadline: personalDeadline,
           });
           const fetchedUser = await fetchUser(user);
-          expect(fetchedUser.computedApplicationDeadline).toEqual(personalDeadline);
+          expect(fetchedUser.computedApplicationDeadline).toEqual(
+            personalDeadline,
+          );
         });
         test('Global in the Past', async () => {
           await generateMockUniverseState({
-            applyOffset: -10000
+            applyOffset: -10000,
           });
           const personalDeadline = new Date().getTime();
 
@@ -290,7 +324,9 @@ describe('Virtual', () => {
             personalApplicationDeadline: personalDeadline,
           });
           const fetchedUser = await fetchUser(user);
-          expect(fetchedUser.computedApplicationDeadline).toEqual(personalDeadline);
+          expect(fetchedUser.computedApplicationDeadline).toEqual(
+            personalDeadline,
+          );
         });
       });
       test('No Personal Deadline', async () => {
@@ -298,9 +334,10 @@ describe('Virtual', () => {
 
         const user = await User.create(hackerUser);
         const fetchedUser = await fetchUser(user);
-        expect(fetchedUser.computedApplicationDeadline).toEqual((await fetchUniverseState()).public.globalApplicationDeadline);
+        expect(fetchedUser.computedApplicationDeadline).toEqual(
+          (await fetchUniverseState()).public.globalApplicationDeadline,
+        );
       });
-
     });
     describe('Confirmation', () => {
       describe('Personal Deadline', () => {
@@ -317,7 +354,7 @@ describe('Virtual', () => {
         });
         test('Global in the Past', async () => {
           await generateMockUniverseState({
-            confirmOffset: -10000
+            confirmOffset: -10000,
           });
           const personalDeadline = new Date().getTime();
 
@@ -334,15 +371,21 @@ describe('Virtual', () => {
 
         const user = await User.create(hackerUser);
         const fetchedUser = await fetchUser(user);
-        expect(fetchedUser.computedRSVPDeadline).toEqual((await fetchUniverseState()).public.globalConfirmationDeadline);
+        expect(fetchedUser.computedRSVPDeadline).toEqual(
+          (await fetchUniverseState()).public.globalConfirmationDeadline,
+        );
       });
     });
   });
 
   describe('Mail Merge', () => {
     beforeEach(() => {
-      canUpdateApplication.mockImplementation(jest.requireActual('../../../models/validator').canUpdateApplication);
-      canRSVP.mockImplementation(jest.requireActual('../../../models/validator').canRSVP);
+      canUpdateApplication.mockImplementation(
+        jest.requireActual('../../../models/validator').canUpdateApplication,
+      );
+      canRSVP.mockImplementation(
+        jest.requireActual('../../../models/validator').canRSVP,
+      );
     });
 
     test('First Name', async () => {
@@ -364,7 +407,9 @@ describe('Virtual', () => {
       const user = await User.create(organizerUser);
       const fetchedUser = await fetchUser(user);
 
-      expect(fetchedUser.mailmerge.MERGE_APPLICATION_DEADLINE).toEqual(stringifyUnixTime(mockDate));
+      expect(fetchedUser.mailmerge.MERGE_APPLICATION_DEADLINE).toEqual(
+        stringifyUnixTime(mockDate),
+      );
     });
     test('Confirmation Deadline', async () => {
       const mockDate = 54321;
@@ -373,13 +418,13 @@ describe('Virtual', () => {
       const user = await User.create(organizerUser);
       const fetchedUser = await fetchUser(user);
 
-      expect(fetchedUser.mailmerge.MERGE_CONFIRMATION_DEADLINE).toEqual(stringifyUnixTime(mockDate));
+      expect(fetchedUser.mailmerge.MERGE_CONFIRMATION_DEADLINE).toEqual(
+        stringifyUnixTime(mockDate),
+      );
     });
   });
 
-
   describe('Text Status', () => {
-
     beforeEach(() => {
       isRSVPExpired.mockReturnValue(false);
       isApplicationExpired.mockReturnValue(false);
@@ -561,7 +606,6 @@ describe('Virtual', () => {
     });
   });
   describe('Internal Text Status', () => {
-
     test('Not applied', async () => {
       const user: IUser = await User.create({
         ...hackerUser,
@@ -729,13 +773,9 @@ describe('Virtual', () => {
         ...hackerUser,
         internal: {
           applicationScores: {
-            whyHT6: {
+            shortEssay: {
               score: 100,
               reviewer: 'foobar',
-            },
-            project: {
-              score: 101,
-              reviewer: 'barfoo',
             },
           },
         },
@@ -748,21 +788,16 @@ describe('Virtual', () => {
       test('Perfect score', async () => {
         const user = await User.create({
           ...hackerUser,
-          hackerApplication: {
-          },
+          hackerApplication: {},
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: 4,
                 reviewer: 'foobar',
               },
-              whyHT6: {
+              shortEssay: {
                 score: 4,
                 reviewer: 'foobar',
-              },
-              project: {
-                score: 4,
-                reviewer: 'barfoo',
               },
               portfolio: {
                 score: 2,
@@ -780,17 +815,13 @@ describe('Virtual', () => {
           ...hackerUser,
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: 1,
                 reviewer: 'foobar',
               },
-              whyHT6: {
+              shortEssay: {
                 score: 1,
                 reviewer: 'foobar',
-              },
-              project: {
-                score: 2,
-                reviewer: 'barfoo',
               },
               portfolio: {
                 score: 3,
@@ -800,7 +831,9 @@ describe('Virtual', () => {
           },
         });
 
-        expect(user.internal.computedApplicationScore).toEqual(7 / totalAvailablePoints.normal * 100);
+        expect(user.internal.computedApplicationScore).toEqual(
+          (7 / totalAvailablePoints.normal) * 100,
+        );
       });
 
       test('Noob haxxor', async () => {
@@ -811,23 +844,21 @@ describe('Virtual', () => {
           },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: 1,
                 reviewer: 'foobar',
               },
-              whyHT6: {
+              shortEssay: {
                 score: 1,
                 reviewer: 'foobar',
-              },
-              project: {
-                score: 2,
-                reviewer: 'barfoo',
               },
             },
           },
         });
 
-        expect(user.internal.computedApplicationScore).toEqual(4 / totalAvailablePoints.first * 100);
+        expect(user.internal.computedApplicationScore).toEqual(
+          (4 / totalAvailablePoints.first) * 100,
+        );
       });
 
       test('Noob haxxor but they somehow also get their portfolio graded', async () => {
@@ -838,17 +869,13 @@ describe('Virtual', () => {
           },
           internal: {
             applicationScores: {
-              creativeResponse: {
+              longEssay: {
                 score: 1,
                 reviewer: 'foobar',
               },
-              whyHT6: {
+              shortEssay: {
                 score: 1,
                 reviewer: 'foobar',
-              },
-              project: {
-                score: 2,
-                reviewer: 'barfoo',
               },
               portfolio: {
                 score: 100000,
@@ -858,7 +885,9 @@ describe('Virtual', () => {
           },
         });
 
-        expect(user.internal.computedApplicationScore).toEqual(4 / totalAvailablePoints.first * 100);
+        expect(user.internal.computedApplicationScore).toEqual(
+          (4 / totalAvailablePoints.first) * 100,
+        );
       });
     });
   });
@@ -893,7 +922,6 @@ describe('Virtual', () => {
         volunteer: true,
         hacker: false,
       });
-
     });
     test('Volunteer', async () => {
       const user = await User.create({
