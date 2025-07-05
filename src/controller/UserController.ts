@@ -244,7 +244,7 @@ export const updateWaiver = async (requestUser: IUser, expressFile: any) => {
   if (!expressFile) {
     throw new BadRequestError('Invalid file');
   }
-  await testCanUpdateApplication(requestUser);
+
   if (expressFile.size > 5000000) {
     throw new ForbiddenError('File exceeds 5MB');
   }
