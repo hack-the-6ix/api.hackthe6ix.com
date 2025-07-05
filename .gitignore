@@ -7,3 +7,4 @@ config/settings.json
 config/mailer.json
 config/gcp.json
 dev_logs
+.DS_Store

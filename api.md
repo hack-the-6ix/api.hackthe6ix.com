@@ -880,6 +880,16 @@ Returns a ZIP of all the resumes of users who were accepted or waitlisted and co
 
 Binary blob
 
+### GET - Waiver Export (Organizer)
+
+`/api/action/waiverExport`
+
+Returns a ZIP of all the waivers of users who have RSVPd and have submitted a waiver.
+
+#### Output Specification
+
+Binary blob
+
 ### POST - Disassociate Discord (Organizer)
 
 `/api/action/disassociateDiscord`
@@ -1109,6 +1119,29 @@ Generates an API token that can be used to access the API programmatically.
   "message": [{
       "token": "<token>",
   }]
+}
+```
+
+### PUT - Update Waiver (Hacker)
+
+`/api/action/updateWaiver`
+
+#### Input Specification
+
+Send the waiver file with the name field `waiver` and magic will happen!
+
+### GET - Get Waiver URL (Hacker)
+
+`/api/action/getWaiverURL`
+
+#### Output Specification
+
+Returns a presigned URL to download the user's waiver PDF.
+
+```
+{
+  status: 200,
+  message: "<presigned waiver url>"
 }
 ```
 

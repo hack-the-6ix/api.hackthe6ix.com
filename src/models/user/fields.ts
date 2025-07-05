@@ -301,6 +301,26 @@ export const hackerApplication = {
       readCheck: true,
     },
 
+    waiverFileName: {
+      type: String,
+      caption: 'Waiver',
+      inTextSearch: true,
+      readCheck: true,
+      writeCheck: false,
+      submitCheck: (request: WriteCheckRequest<any, IUser>) =>
+        request.targetObject?.hackerApplication?.waiverFileName?.length > 0,
+    },
+
+    friendlyWaiverFileName: {
+      type: String,
+      caption: 'Waiver Name',
+      inTextSearch: true,
+      readCheck: true,
+      writeCheck: false,
+      submitCheck: (request: WriteCheckRequest<any, IUser>) =>
+        request.targetObject?.hackerApplication?.waiverFileName?.length > 0,
+    },
+
     githubLink: {
       type: String,
       caption: 'GitHub',
@@ -432,10 +452,17 @@ const rsvpForm = {
       writeCheck: true,
       readCheck: true,
     },
-    waiverAgreed: {
-      type: Boolean,
+    waiverFileName: {
+      type: String,
       default: false,
-      caption: 'Waiver Agreed',
+      caption: 'Waiver file name',
+      writeCheck: true,
+      readCheck: true,
+    },
+    friendlyWaiverFileName: {
+      type: String,
+      default: false,
+      caption: 'Friendly waiver file name',
       writeCheck: true,
       readCheck: true,
     },
@@ -1156,6 +1183,8 @@ export interface IApplication {
   resumeFileName: string;
   friendlyResumeFileName: string;
   resumeSharePermission: boolean;
+  waiverFileName: string;
+  friendlyWaiverFileName: string;
   githubLink: string;
   portfolioLink: string;
   linkedinLink: string;

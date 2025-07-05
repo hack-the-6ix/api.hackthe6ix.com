@@ -213,26 +213,15 @@ export const updateResume = async (requestUser: IUser, expressFile: any) => {
   if (!expressFile) {
     throw new BadRequestError('Invalid file');
   }
-
-  // Make sure user is allowed to edit their app
   await testCanUpdateApplication(requestUser);
-
-  // Ensure file is within limit
-  // NOTE: There is another limit set when express-fileupload is initialized in index.ts
   if (expressFile.size > 5000000) {
     throw new ForbiddenError('File exceeds 5MB');
   }
-
-  // Ensure file type is correct
   if (expressFile.mimetype !== 'application/pdf') {
     throw new ForbiddenError('Invalid file type! Must be PDF');
   }
-
   const filename = `${requestUser._id}-resume.pdf`;
-
   await writeBlob('resumes', filename, expressFile.data);
-
-  // Save new resume id to DB
   await User.findOneAndUpdate(
     {
       _id: requestUser._id,
@@ -242,7 +231,37 @@ export const updateResume = async (requestUser: IUser, expressFile: any) => {
       'hackerApplication.friendlyResumeFileName': expressFile.name,
     },
   );
+  return 'Success';
+};
 
+/**
+ * Update waiver on file. Only pdf files under 5MB will be allowed.
+ *
+ * @param requestUser
+ * @param expressFile - express fileupload file object
+ */
+export const updateWaiver = async (requestUser: IUser, expressFile: any) => {
+  if (!expressFile) {
+    throw new BadRequestError('Invalid file');
+  }
+  await testCanUpdateApplication(requestUser);
+  if (expressFile.size > 5000000) {
+    throw new ForbiddenError('File exceeds 5MB');
+  }
+  if (expressFile.mimetype !== 'application/pdf') {
+    throw new ForbiddenError('Invalid file type! Must be PDF');
+  }
+  const filename = `${requestUser._id}-waiver.pdf`;
+  await writeBlob('waivers', filename, expressFile.data);
+  await User.findOneAndUpdate(
+    {
+      _id: requestUser._id,
+    },
+    {
+      'rsvpForm.waiverFileName': filename,
+      'rsvpForm.friendlyWaiverFileName': expressFile.name,
+    },
+  );
   return 'Success';
 };
 
@@ -257,16 +276,35 @@ export const getResumeURL = async (requestUser: IUser) => {
   if (!user) {
     throw new NotFoundError('User not found');
   }
-
   if (!user.hackerApplication.resumeFileName) {
     throw new NotFoundError('User has no resume');
   }
-
   const resumeURL = await getBlobDownloadUrl(
     'resumes',
     user.hackerApplication.resumeFileName,
   );
   return resumeURL;
+};
+
+/**
+ * Return a signed URL to download the user's waiver
+ *
+ * @param requestUser
+ * @returns Waiver URL
+ */
+export const getWaiverURL = async (requestUser: IUser) => {
+  const user = await User.findOne({ _id: requestUser._id });
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  if (!user.hackerApplication.waiverFileName) {
+    throw new NotFoundError('User has no waiver');
+  }
+  const waiverURL = await getBlobDownloadUrl(
+    'waivers',
+    user.hackerApplication.waiverFileName,
+  );
+  return waiverURL;
 };
 
 /**
