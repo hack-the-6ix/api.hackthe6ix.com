@@ -116,7 +116,7 @@ function createWinstonLogger() {
     }));
   }
 
-  // Log to StackDriver in production and well as
+  // Log to stdout at log level info in production
   if (process.env.NODE_ENV === 'production') {
     logger.add(new winston.transports.Console({
       format: loggingFormat,

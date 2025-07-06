@@ -26,4 +26,4 @@ COPY --from=builder /build/node_modules node_modules
 COPY --from=builder /build/dist dist
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/bin/sh", "-c", "source $HT6_ENV_SOURCE && exec node ./dist/index.js"]
+CMD ["/bin/sh", "-c", "source $HT6_ENV_SOURCE && exec node ./dist/bootstrap/bootstrap.js && exec node ./dist/index.js"]
