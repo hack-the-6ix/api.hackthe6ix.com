@@ -18,6 +18,7 @@ import {
   mockUpdateSubscriber,
 } from './dev';
 
+import {log} from "../../../services/logger";
 
 const listmonk = axios.create({
   baseURL: `${process.env.LISTMONK_API_HOST}/api`,
@@ -98,11 +99,15 @@ export const updateSubscriberRequest = async (subscriberID: number, email: strin
         preconfirm_subscriptions: true
     };
 
+    log.info(`[LISTMONK] update request: ${JSON.stringify(updateObject)}`);
+
     const res = await listmonk.put(`/subscribers/${subscriberID}`, updateObject);
 
     if (res.status !== 200) {
         throw new InternalServerError('Unable to update subscriber');
     }
+
+    log.info(`[LISTMONK] update response: ${JSON.stringify(res.data)}`);
 }
 
 export const addSubscriptionsRequest = async (mailingListID: string | number, subscriberIDs: number[]) => {
