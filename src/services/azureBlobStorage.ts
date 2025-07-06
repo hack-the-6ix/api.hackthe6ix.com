@@ -1,7 +1,6 @@
 import {
   BlobServiceClient,
   ContainerClient,
-  BlockBlobClient,
   generateBlobSASQueryParameters,
   BlobSASPermissions,
   StorageSharedKeyCredential,
@@ -15,6 +14,8 @@ export type SystemBlobContainer = (typeof BLOB_CONTAINERS)[number];
 let blobServiceClient: BlobServiceClient | null = null;
 const containerCache: Record<string, ContainerClient> = {};
 const containersSet = new Set(BLOB_CONTAINERS);
+
+const ensuredContainers = new Set<SystemBlobContainer>();
 
 // Initialize the Azure Blob Service Client
 export function initializeBlobService(connectionString?: string) {
@@ -51,8 +52,13 @@ export function getContainerClient(
 export async function ensureContainerExists(
   containerName: SystemBlobContainer,
 ): Promise<void> {
+  if (ensuredContainers.has(containerName)) {
+    return;
+  }
+
   const containerClient = getContainerClient(containerName);
   await containerClient.createIfNotExists();
+  ensuredContainers.add(containerName);
 }
 
 // Generate a presigned URL for uploading
