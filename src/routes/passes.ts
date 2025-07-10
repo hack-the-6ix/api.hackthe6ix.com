@@ -5,7 +5,6 @@ import path from "path";
 import { GoogleAuth } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
-
 const router = express.Router();
 
 const credentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -15,40 +14,39 @@ const Google = new GoogleAuth({
     scopes: ["https://www.googleapis.com/auth/wallet_object.issuer"],
 });
 const baseUrl = "https://walletobjects.googleapis.com/walletobjects/v1";
-const classId = `${issuerId}.hackathon2025`;
+const classId = `${issuerId}.hackthe6ix`;
 
 async function createPassClass(): Promise<void> {
     const httpClient = await Google.getClient();
 
     let genericClass = {
-        "id": classId,
-        "eventName": {
-          "defaultValue": {
-            "language": "en-US",
-            "value": "Hack The 6ix 2025"
-          }
-        },
-        "issuerName": "Hack The 6ix",
-        "reviewStatus": "UNDER_REVIEW",
-        "seatNumberLabel": {
-          "defaultValue": {
-            "language": "en-US",
-            "value": "Team"
-          }
-        },
-        "locations": [
-          {
-            "latitude": 43.7731,
-            "longitude": 79.5038
-          }
-        ],
-        "startDate": "2025-09-12T09:00:00Z",
-        "endDate":   "2025-09-14T18:00:00Z",
-        "hexBackgroundColor": "#4285F4",
-        "logo": {
-          "sourceUri": { "uri": "https://hackthe6ix.com/icon.png?c9f2203f230562e3" },
-          "contentDescription": {
-            "defaultValue": { "language":"en-US","value":"Hackathon Logo" }
+        'id': `${classId}`,
+        'classTemplateInfo': {
+          'cardTemplateOverride': {
+            'cardRowTemplateInfos': [
+              {
+                'twoItems': {
+                  'startItem': {
+                    'firstValue': {
+                      'fields': [
+                        {
+                          'fieldPath': 'object.textModulesData[\'address\']'
+                        }
+                      ]
+                    }
+                  },
+                  'endItem': {
+                    'firstValue': {
+                      'fields': [
+                        {
+                          'fieldPath': 'object.textModulesData[\'date\']'
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       };
@@ -88,22 +86,24 @@ async function createPassObject(userID: string, userType: string): Promise<strin
     let objectSuffix = `${userID.replace(/[^\w.-]/g, '_')}`;
 
     let genericObject = {
-        "id": `${issuerId}.${objectSuffix}`,
-        "classId": classId,
-        "state": "ACTIVE",
+        'id': `${issuerId}.${objectSuffix}`,
+        'classId': classId,
+        'genericType': 'GENERIC_TYPE_UNSPECIFIED',
+        'state': 'ACTIVE',
         'cardTitle': {
             'defaultValue': {
-            'language': 'en',
-            'value': 'Hack The 6ix 2025'
+                'language': 'en',
+                'value': 'Hack The 6ix 2025'
             }
         },
-        "barcode": {
-            "type": "QR_CODE",
-            "value": JSON.stringify({
-                userID: userID,
-                userType: userType,
+        'hexBackgroundColor': '#CFEDAF',
+        'barcode': {
+            'type': 'QR_CODE',
+            'value': JSON.stringify({
+                'userID': userID,
+                'userType': userType,
             }),        
-            "alternateText": `${userID}`
+            'alternateText': `${userID}`
         },
         'subheader': {
             'defaultValue': {
@@ -113,20 +113,31 @@ async function createPassObject(userID: string, userType: string): Promise<strin
         },
         'header': {
             'defaultValue': {
-            'language': 'en',
-            'value': `${userID}`
+                'language': 'en',
+                'value': `Winston Yu`
             }
         },
         'heroImage': {
             'sourceUri': {
-            'uri': 'https://storage.googleapis.com/wallet-lab-tools-codelab-artifacts-public/google-io-hero-demo-only.jpg'
+                'uri': 'https://miro.medium.com/v2/resize:fit:1400/1*IMRytrOprJjmRPKEdtt6Aw.png'
             }
         },
-        "textModulesData": [
-            {
-                "header": "Check-In Instructions",
-                "body": "Please show this QR code at the door."
+        'logo': {
+            'sourceUri': {
+                'uri': 'https://hackthe6ix.com/icon.png?c9f2203f230562e3'
             }
+        },
+        'textModulesData': [
+            {
+                'id': 'address',
+                'header': 'Address',
+                'body': 'York University Keele Campus,\n Accolade East Building'
+            },
+              {
+                'id': 'date',
+                'header': 'July 18, 2025',
+                'body': '8:00 PM'
+              }
         ]
     }
 
