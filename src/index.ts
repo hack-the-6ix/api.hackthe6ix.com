@@ -14,6 +14,7 @@ import apiRouter from './routes/api';
 import authRouter from './routes/auth';
 import healthRouter from './routes/health';
 import nfcRouter from './routes/nfc'
+import passesRouter from './routes/passes'
 
 import { logResponse, log } from './services/logger';
 import './services/environmentValidator';
@@ -51,6 +52,7 @@ app.use('/api/action', actionRouter);
 app.use('/auth', authRouter);
 app.use('/health', healthRouter);
 app.use('/nfc', nfcRouter);
+app.use('/passes', passesRouter);
 
 app.use(function(err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
   logResponse(req, res, (

@@ -1,0 +1,59 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.com.hackthe6ix.hackthe6ix2025",
+  "serialNumber": "123456789",
+  "teamIdentifier": "GFVM2XT834",
+  "organizationName": "Hack The 6ix",
+  "description": "Hack The 6ix 2025",
+  "logoText": " ",
+  "backgroundColor": "rgb(207,237,175)",
+  "foregroundColor": "rgb(78,50,45)",
+  "labelColor": "rgb(78,50,45)",
+  "suppressStripShine": true,
+  "logoImage": "logo.png",
+  "eventTicket": {
+    "headerFields": [
+      {
+        "key": "eventDateTime",
+        "label": "8:00PM",
+        "value": "July 18, 2025\n8:00PM",
+        "textAlignment": "PKTextAlignmentRight"
+      }
+    ],
+    "primaryFields": [
+      {
+        "key": "eventName",
+        "label": "",
+        "value": "Hack The 6ix 2025",
+        "textAlignment": "PKTextAlignmentLeft"
+      }
+    ],
+    "secondaryFields": [
+      {
+        "key": "location",
+        "label": "ADDRESS",
+        "value": "York University Keele Campus, 83 York Blvd, North York, ON M7A 2C5",
+        "textAlignment": "PKTextAlignmentLeft"
+      }
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "hacker",
+        "label": "HACKER",
+        "value": "Winston Yu",
+        "textAlignment": "PKTextAlignmentLeft"
+      },
+      {
+        "key": "additionalInfo",
+        "label": "ADDITIONAL INFO",
+        "value": "Accolade East Building",
+        "textAlignment": "PKTextAlignmentRight"
+      }
+    ]
+  },
+  "barcode": {
+    "format": "PKBarcodeFormatQR",
+    "message": "https://yourcompany.com/redeem?code=123456",
+    "messageEncoding": "iso-8859-1"
+  }
+}
