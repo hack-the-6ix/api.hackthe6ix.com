@@ -44,7 +44,7 @@ import {
   removeCheckInNotes,
   getResumeURL,
   syncUserMailingListsByID,
-  getDownloadPassQR
+  getDownloadPassQR,
   updateWaiver,
   getWaiverURL,
 } from '../controller/UserController';
