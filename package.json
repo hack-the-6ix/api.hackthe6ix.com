@@ -49,6 +49,7 @@
     "express-fileupload": "^1.5.1",
     "express-mongo-sanitize": "^2.2.0",
     "file-type": "^21.0.0",
+    "google-auth-library": "^10.1.0",
     "jsonwebtoken": "^9.0.2",
     "jsqr": "^1.4.0",
     "lodash.clonedeep": "^4.5.0",
