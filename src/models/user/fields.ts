@@ -301,6 +301,26 @@ export const hackerApplication = {
       readCheck: true,
     },
 
+    waiverFileName: {
+      type: String,
+      caption: 'Waiver',
+      inTextSearch: true,
+      readCheck: true,
+      writeCheck: false,
+      submitCheck: (request: WriteCheckRequest<any, IUser>) =>
+        request.targetObject?.hackerApplication?.waiverFileName?.length > 0,
+    },
+
+    friendlyWaiverFileName: {
+      type: String,
+      caption: 'Waiver Name',
+      inTextSearch: true,
+      readCheck: true,
+      writeCheck: false,
+      submitCheck: (request: WriteCheckRequest<any, IUser>) =>
+        request.targetObject?.hackerApplication?.waiverFileName?.length > 0,
+    },
+
     githubLink: {
       type: String,
       caption: 'GitHub',
@@ -328,7 +348,7 @@ export const hackerApplication = {
       readCheck: true,
     },
 
-    creativeResponseEssay: {
+    longEssay: {
       type: String,
       caption:
         "Tell us about a project you've enjoyed working on (this can be non-technical!). What made you decide to work on this project? What challenges did you face and how did you overcome them?",
@@ -338,7 +358,7 @@ export const hackerApplication = {
         minLength(1)(request) && maxLength(3000)(request),
     },
 
-    whyHT6Essay: {
+    shortEssay: {
       type: String,
       caption:
         'If you could not do anything related to school, work, or coding for 4 months, what would you do and why?',
@@ -422,7 +442,6 @@ const rsvpForm = {
       type: [String],
       default: [] as string[],
       caption: 'Selected companies',
-
       writeCheck: true,
       readCheck: true,
     },
@@ -430,6 +449,26 @@ const rsvpForm = {
       type: Boolean,
       default: false,
       caption: 'In person RSVP reminder',
+      writeCheck: true,
+      readCheck: true,
+    },
+    waiverFileName: {
+      type: String,
+      default: false,
+      caption: 'Waiver file name',
+      writeCheck: true,
+      readCheck: true,
+    },
+    friendlyWaiverFileName: {
+      type: String,
+      default: false,
+      caption: 'Friendly waiver file name',
+      writeCheck: true,
+      readCheck: true,
+    },
+    age: {
+      type: Number,
+      caption: 'Age',
       writeCheck: true,
       readCheck: true,
     },
@@ -508,26 +547,6 @@ const internal = {
         },
 
         oneSentenceEssay: {
-          writeCheck: true,
-          readCheck: true,
-
-          FIELDS: {
-            score: {
-              type: Number,
-              default: -1,
-              writeCheck: true,
-              readCheck: true,
-            },
-
-            reviewer: {
-              type: String,
-              writeCheck: true,
-              readCheck: true,
-            },
-          },
-        },
-
-        project: {
           writeCheck: true,
           readCheck: true,
 
@@ -1121,10 +1140,6 @@ export interface IUser extends BasicUser {
         score: number;
         reviewer: string;
       };
-      project: {
-        score: number;
-        reviewer: string;
-      };
       portfolio: {
         score: number;
         reviewer: string;
@@ -1168,11 +1183,13 @@ export interface IApplication {
   resumeFileName: string;
   friendlyResumeFileName: string;
   resumeSharePermission: boolean;
+  waiverFileName: string;
+  friendlyWaiverFileName: string;
   githubLink: string;
   portfolioLink: string;
   linkedinLink: string;
-  creativeResponseEssay: string;
-  whyHT6Essay: string;
+  longEssay: string;
+  shortEssay: string;
   oneSentenceEssay: string;
   howDidYouHearAboutHT6: string[];
   previousHT6Experience: string[];
@@ -1195,4 +1212,6 @@ export type IPartialApplication = Partial<IApplication>;
 export interface IRSVPForm {
   selectedCompanies?: string[];
   remindInPersonRSVP?: boolean;
+  waiverAgreed?: boolean;
+  age?: number;
 }

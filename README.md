@@ -24,21 +24,23 @@ The server should be up and running on https://localhost:6971, or whatever is co
 In `.env`, set `DATABASE` to `mongodb://mongo:27017/ht6-backend` to use the MongoDB instance hosted
 together with the backend.
 
-#### Logging
+#### Bootstrap
+The backend does not work properly work on an empty database. Namely, mailer and authentication settings aren't present. 
 
-We are using [Stackdriver](https://cloud.google.com/products/operations) to log events in our system. Be sure to setup the `GCP_LOGGING` environment
-variables! Local logs will be stored in `logs`.
+We use configuration files under `config` to set up the database. If you are using the Docker container, the bootstrap script always runs on startup and checks if the database is set up. If not, it will search for the JSON configuration in the config directory and populate the settings from there. If the env variable `USE_AZURE_CONTAINER_INIT` is set, it will try to use the Azure storage account credentials `AZURE_STORAGE_CONNECTION_STRING` to read the JSON files in the container whose name is the value of `USE_AZURE_CONTAINER_INIT`.
+
+If you are not using Docker, you should run the `start:bootstrap` npm script.
+
+**Hack the 6ix members:** you can manage our bootstrap configuration files in the [backend-initfiles repository](https://github.com/hack-the-6ix/backend-initfiles).
 
 #### Mailer
-We are using Mailtrain (https://github.com/hack-the-6ix/mailtrain) to handle mailing lists and 
+We are using listmonk (https://github.com/knadh/listmonk) to handle mailing lists and 
 general email sending. As such, you should have an instance running prior to starting the backend,
 otherwise emails won't work.
 
-Setup `.env` with the Mailtrain root path (in our case `https://mailtrain.hackthe6ix.com`) and API key.
-You must also configure email templates and mailing lists before the server can be started. Copy `config/settings.json.example` to `config/settings.json` and populate the placeholder fields with the relevant 
+Setup `.env` with the listmonk root path (in our case `https://lists.hackthe6ix.com`) and username and password.
+You must also configure email templates and mailing lists before the server can be started. Copy `config/mailer.json.example` to `config/mailer.json` and populate the placeholder fields with the relevant 
 data.
-
-**NOTE: When creating the mailing lists, it is important to include fields for mail merge, such as `MERGE_CONFIRMATION_DEADLINE` and `MERGE_APPLICATION_DEADLINE` for all lists!**
 
 **NOTE: In development mode, ALL EMAILS will land in `dev_logs` instead of being actually sent**
 
@@ -48,6 +50,10 @@ For certificates, you must encode the PEM certificate (with headers) to base64. 
 
 
 Note: You must clear the settings collection in the database for the SAML settings to be updated from the bootstrap config.
+
+#### Logging
+
+We use Winston as our logger to stdout. In our Azure Container apps deployment, stdout is automatically loaded into Log Analytics.
 
 ### Development
 ```

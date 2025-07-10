@@ -6,6 +6,7 @@ import * as path from 'path';
 import "../services/mongoose_service";
 
 import {log} from "../services/logger";
+import {initializeBlobService, getBlobServiceClient} from "../services/azureBlobStorage";
 
 import InitializationRecord from "../models/initializationrecord/InitializationRecord";
 import Settings from '../models/settings/Settings';
@@ -15,7 +16,62 @@ import {MailingList, MailTemplate} from "../types/mailer";
 import {verifyConfigEntity} from "../services/mailer/util/verify_config";
 import {dbEvents, mongoose} from "../services/mongoose_service";
 
-// TODO: ADd this script to run first before all npm scripts and Docker container!
+// Helper function to read JSON files from Azure Blob Storage
+async function readJsonFromAzure(fileName: string): Promise<any> {
+  const containerName = process.env.USE_AZURE_CONTAINER_INIT;
+  if (!containerName) {
+    throw new Error('USE_AZURE_CONTAINER_INIT environment variable is not set');
+  }
+
+  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+  if (!connectionString) {
+    throw new Error('AZURE_STORAGE_CONNECTION_STRING environment variable is not set');
+  }
+
+  // Initialize blob service if not already initialized
+  try {
+    getBlobServiceClient();
+  } catch (error) {
+    initializeBlobService(connectionString);
+  }
+
+  const blobServiceClient = getBlobServiceClient();
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+
+  try {
+    const downloadResponse = await blockBlobClient.download();
+    const content = await streamToString(downloadResponse.readableStreamBody!);
+    return JSON.parse(content);
+  } catch (error) {
+    throw new Error(`Failed to read ${fileName} from Azure container ${containerName}: ${error}`);
+  }
+}
+
+// Helper function to convert stream to string
+async function streamToString(readableStream: NodeJS.ReadableStream): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    readableStream.on('data', (data) => {
+      chunks.push(data);
+    });
+    readableStream.on('end', () => {
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    });
+    readableStream.on('error', reject);
+  });
+}
+
+// Helper function to read JSON files from either local file system or Azure storage
+async function readConfigJson(fileName: string): Promise<any> {
+  if (process.env.USE_AZURE_CONTAINER_INIT) {
+    log.info(`Reading ${fileName} from Azure container: ${process.env.USE_AZURE_CONTAINER_INIT}`);
+    return await readJsonFromAzure(fileName);
+  } else {
+    log.info(`Reading ${fileName} from local file system`);
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'config', fileName)).toString('utf8'));
+  }
+}
 
 async function initializeSettings() {
   const initKey = "settings";
@@ -26,7 +82,7 @@ async function initializeSettings() {
 
   if(!initCheck) {
     log.info("Initializing settings.");
-    const settingsData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'config', 'settings.json')).toString('utf8'));
+    const settingsData = await readConfigJson('settings.json');
     await Settings.findOneAndUpdate({}, settingsData, {
       upsert: true
     })
@@ -55,7 +111,7 @@ async function initializeTemplates() {
 
   if(!initCheck) {
     log.info("Initializing mail templates.");
-    const mailerData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'config', 'mailer.json')).toString('utf8'));
+    const mailerData = await readConfigJson('mailer.json');
 
     // Verify templates
     verifyConfigEntity(mailerData, MailTemplate, 'templates', ['templateID']);
@@ -92,7 +148,7 @@ async function initializeLists() {
 
   if(!initCheck) {
     log.info("Initializing mailing lists.");
-    const mailerData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'config', 'mailer.json')).toString('utf8'));
+    const mailerData = await readConfigJson('mailer.json');
 
     // Verify lists
     verifyConfigEntity(mailerData, MailingList, 'lists', ['listID', 'query']);

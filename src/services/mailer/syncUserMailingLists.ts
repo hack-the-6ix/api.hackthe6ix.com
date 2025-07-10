@@ -4,6 +4,7 @@ import { getList } from './util/db';
 import { MailingList } from '../../types/mailer';
 import userInList from "./util/user_in_list";
 import { createSubscriberRequest, getSubscriberIdByEmailRequest, getSubscriberInfoRequest, updateSubscriberRequest } from "./util/listmonk";
+import {log} from "../../services/logger";
 
 const mailingListCache = new DynamicCacheProvider(async (list: string) => {
     return await getList(list)
@@ -34,6 +35,8 @@ export default async (user: IUser) => {
             expectedLists.push(listConfig.listID);
         }
     }
+
+    log.info(`[LISTMONK] Syncing user ${user.email} to mailing lists: ${expectedLists.join(',')}`);
 
     let subscriberID = user.mailingListSubcriberID;
 

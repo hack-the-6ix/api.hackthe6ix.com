@@ -5,7 +5,11 @@ let statistics: IStatistics;
 export const statisticsLifetime = 1000 * 60 * 60; // stats live for 60 minutes
 
 export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
-  if (!statistics || (new Date().getTime() - statistics.timestamp) > statisticsLifetime || update) {
+  if (
+    !statistics ||
+    new Date().getTime() - statistics.timestamp > statisticsLifetime ||
+    update
+  ) {
     // The cache is too old, or the user explicitly asked for an update
 
     statistics = {
@@ -37,9 +41,9 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
             reviewed: 0,
             notReviewed: 0,
             applicationScores: {
-              creativeResponse: 0,
-              whyHT6: 0,
-              project: 0,
+              longEssay: 0,
+              shortEssay: 0,
+              oneSentenceEssay: 0,
               portfolio: 0,
             },
             reviewers: {},
@@ -78,7 +82,6 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
     };
 
     const generateDate = (date: Date) => {
-
       let month = (date.getMonth() + 1).toString();
 
       if (month.length < 2) {
@@ -92,7 +95,6 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
       }
 
       return `${month}-${day}`;
-
     };
 
     for (const rawUser of users) {
@@ -126,7 +128,10 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
       // Update status
       for (const s of Object.keys(user.status)) {
         // We won't include expired invitations in the accepted statistics
-        if ((user.status as any)[s] && !(s === 'accepted' && user.status.rsvpExpired)) {
+        if (
+          (user.status as any)[s] &&
+          !(s === 'accepted' && user.status.rsvpExpired)
+        ) {
           (statistics.hacker.status as any)[s]++;
         }
       }
@@ -159,17 +164,21 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
         }
 
         // Individual questions
-        if (user?.internal?.applicationScores?.creativeResponse?.score >= 0) {
-          statistics.hacker.submittedApplicationStats.review.applicationScores.creativeResponse++;
+        if (user?.internal?.applicationScores?.longEssay?.score >= 0) {
+          statistics.hacker.submittedApplicationStats.review.applicationScores
+            .longEssay++;
         }
-        if (user?.internal?.applicationScores?.whyHT6?.score >= 0) {
-          statistics.hacker.submittedApplicationStats.review.applicationScores.whyHT6++;
+        if (user?.internal?.applicationScores?.shortEssay?.score >= 0) {
+          statistics.hacker.submittedApplicationStats.review.applicationScores
+            .shortEssay++;
         }
-        if (user?.internal?.applicationScores?.project?.score >= 0) {
-          statistics.hacker.submittedApplicationStats.review.applicationScores.project++;
+        if (user?.internal?.applicationScores?.oneSentenceEssay?.score >= 0) {
+          statistics.hacker.submittedApplicationStats.review.applicationScores
+            .oneSentenceEssay++;
         }
         if (user?.internal?.applicationScores?.portfolio?.score >= 0) {
-          statistics.hacker.submittedApplicationStats.review.applicationScores.portfolio++;
+          statistics.hacker.submittedApplicationStats.review.applicationScores
+            .portfolio++;
         }
 
         const scores: any = user?.internal?.applicationScores || {};
@@ -179,22 +188,30 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
           const score = scores[question]?.score;
 
           if (reviewerID) {
-
-            if (!statistics.hacker.submittedApplicationStats.review.reviewers[reviewerID]) {
-
+            if (
+              !statistics.hacker.submittedApplicationStats.review.reviewers[
+                reviewerID
+              ]
+            ) {
               let name;
               try {
-                name = (await User.findOne({ _id: reviewerID }))?.fullName || 'Unknown';
+                name =
+                  (await User.findOne({ _id: reviewerID }))?.fullName ||
+                  'Unknown';
               } catch (e) {
                 name = 'Unknown';
               }
 
-              statistics.hacker.submittedApplicationStats.review.reviewers[reviewerID] = {
+              statistics.hacker.submittedApplicationStats.review.reviewers[
+                reviewerID
+              ] = {
                 total: 0,
                 name: name,
               };
             }
-            statistics.hacker.submittedApplicationStats.review.reviewers[reviewerID].total++;
+            statistics.hacker.submittedApplicationStats.review.reviewers[
+              reviewerID
+            ].total++;
           }
 
           // Compute grade distribution
@@ -208,8 +225,13 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
         }
 
         // Overall score
-        const computedApplicationScore = Math.round(user?.internal?.computedApplicationScore);
-        if (statistics.gradeDistribution.overall[computedApplicationScore] === undefined) {
+        const computedApplicationScore = Math.round(
+          user?.internal?.computedApplicationScore,
+        );
+        if (
+          statistics.gradeDistribution.overall[computedApplicationScore] ===
+          undefined
+        ) {
           statistics.gradeDistribution.overall[computedApplicationScore] = 0;
         }
         statistics.gradeDistribution.overall[computedApplicationScore]++;
@@ -230,14 +252,15 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
 
     for (const date of Object.keys(statistics.summary).sort()) {
       for (const category in statistics.summary[date]) {
-
         if (!cumulativeRecords[category]) {
           cumulativeRecords[category] = 0;
         }
 
-        cumulativeRecords[category] += statistics.summary[date][category].dailyChange;
+        cumulativeRecords[category] +=
+          statistics.summary[date][category].dailyChange;
 
-        statistics.summary[date][category].cumulative = cumulativeRecords[category];
+        statistics.summary[date][category].cumulative =
+          cumulativeRecords[category];
       }
     }
   }
@@ -246,59 +269,59 @@ export const getStatistics = async (update?: boolean): Promise<IStatistics> => {
 };
 
 export type IStatistics = {
-  timestamp: number,
-  total: number,
+  timestamp: number;
+  total: number;
   hacker: {
     status: {
-      applied: number,
-      accepted: number,
-      rejected: number,
-      waitlisted: number,
-      confirmed: number,
-      declined: number,
-      checkedIn: number,
-      rsvpExpired: number,
-      statusReleased: number
-    },
+      applied: number;
+      accepted: number;
+      rejected: number;
+      waitlisted: number;
+      confirmed: number;
+      declined: number;
+      checkedIn: number;
+      rsvpExpired: number;
+      statusReleased: number;
+    };
     submittedApplicationStats: {
       gender: {
-        male: number,
-        female: number,
-        nonBinary: number,
-        other: number,
-        chooseNotToSay: number
-      },
+        male: number;
+        female: number;
+        nonBinary: number;
+        other: number;
+        chooseNotToSay: number;
+      };
       review: {
-        reviewed: number,
-        notReviewed: number,
+        reviewed: number;
+        notReviewed: number;
         applicationScores: {
-          creativeResponse: number,
-          whyHT6: number,
-          project: number,
-          portfolio: number
-        },
-        reviewers: any
-      },
-    },
-    questionBreakdown: any
-  },
+          longEssay: number;
+          shortEssay: number;
+          oneSentenceEssay: number;
+          portfolio: number;
+        };
+        reviewers: any;
+      };
+    };
+    questionBreakdown: any;
+  };
   groups: {
-    hacker: number,
-    admin: number,
-    organizer: number,
-    volunteer: number
-  },
+    hacker: number;
+    admin: number;
+    organizer: number;
+    volunteer: number;
+  };
   summary: {
     [date: string]: {
       [category: string]: {
-        dailyChange: number,
-        cumulative: number
-      }
-    }
-  },
+        dailyChange: number;
+        cumulative: number;
+      };
+    };
+  };
   gradeDistribution: {
     [question: string]: {
-      [score: number]: number
-    }
-  }
-}
+      [score: number]: number;
+    };
+  };
+};

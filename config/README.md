@@ -1,7 +1,5 @@
 # Configuration
 
-WARNING: If you are using the Kubernetes Helm chart, this directory is completely overriden, so do not store any assets that are not loaded by the Helm chart in here (like code)!
-
 ## Mailer
 Before the server starts up, the configuration file will be checked
 against the Enums [here](../src/types/mailer.ts) to ensure it is valid.

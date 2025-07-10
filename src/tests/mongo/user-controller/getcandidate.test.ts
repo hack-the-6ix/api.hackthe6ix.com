@@ -127,9 +127,6 @@ describe('Get candidate', () => {
             oneSentenceEssay: {
               score: 101,
             },
-            project: {
-              score: 101,
-            },
             portfolio: {
               score: 101,
             },

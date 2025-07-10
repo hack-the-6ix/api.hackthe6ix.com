@@ -24,6 +24,7 @@ RUN apk add dumb-init
 COPY package*.json .
 COPY --from=builder /build/node_modules node_modules
 COPY --from=builder /build/dist dist
+COPY scripts/container-start.sh .
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/bin/sh", "-c", "source $HT6_ENV_SOURCE && exec node ./dist/index.js"]
+CMD ["./container-start.sh"]
