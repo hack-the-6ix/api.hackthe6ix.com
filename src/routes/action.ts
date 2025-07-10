@@ -44,6 +44,7 @@ import {
   removeCheckInNotes,
   getResumeURL,
   syncUserMailingListsByID,
+  getDownloadPassQR,
   updateWaiver,
   getWaiverURL,
 } from '../controller/UserController';
@@ -60,6 +61,7 @@ import {
   isVolunteer,
 } from '../services/permissions';
 import { getStatistics } from '../services/statistics';
+import { AllUserTypes } from '../types/types';
 import { generateDiscordOAuthUrl } from '../services/discordApi';
 
 const actionRouter = express.Router();
@@ -221,6 +223,27 @@ actionRouter.post('/rsvp', isHacker, (req: Request, res: Response) => {
  */
 actionRouter.get('/checkInQR', isHacker, (req: Request, res: Response) => {
   logResponse(req, res, getCheckInQR(req.executor!._id, 'User'));
+});
+
+/**
+ * (Hacker)
+ *
+ * Get QR code to redirect to download pass page
+ */
+actionRouter.get('/downloadPassQR', (req: Request, res:Response) => {
+  const { userId, userType, userName } = req.query;
+  const user = {
+    id: userId as string,
+    type: userType as AllUserTypes,
+    name: userName as string
+  }
+  logResponse(
+      req,
+      res,
+      getDownloadPassQR(
+          user
+      )
+  )
 });
 
 // Volunteer endpoints
