@@ -35,7 +35,8 @@ import {
   addCheckInNotes,
   removeCheckInNotes,
   getResumeURL,
-  syncUserMailingListsByID
+  syncUserMailingListsByID,
+  getDownloadPassQR
 } from '../controller/UserController';
 import { logResponse } from '../services/logger';
 import sendAllTemplates from '../services/mailer/sendAllTemplates';
@@ -45,6 +46,7 @@ import verifyMailingList from '../services/mailer/verifyMailingList';
 import {isAdmin, isAuthenticated, isHacker, isOrganizer, isVolunteer} from '../services/permissions';
 import { getStatistics } from '../services/statistics';
 import {generateDiscordOAuthUrl} from "../services/discordApi";
+import { AllUserTypes } from '../types/types';
 
 const actionRouter = express.Router();
 
@@ -258,6 +260,22 @@ actionRouter.get('/checkInQR', isHacker, (req: Request, res:Response) => {
       res,
       getCheckInQR(
           req.executor!._id, "User"
+      )
+  )
+});
+
+/**
+ * (Hacker)
+ *
+ * Get QR code to redirect to download pass page
+ */
+actionRouter.get('/downloadPassQR', (req: Request, res:Response) => {
+  const { userId, userType } = req.query;
+  logResponse(
+      req,
+      res,
+      getDownloadPassQR(
+          userId as string, userType as AllUserTypes
       )
   )
 });

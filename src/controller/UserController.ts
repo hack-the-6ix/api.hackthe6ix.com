@@ -623,6 +623,19 @@ export const getCheckInQR = (
   });
 };
 
+export const getDownloadPassQR = (
+  requestUser: string,
+  userType: AllUserTypes,
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    qrcode.toDataURL(`${process.env.FRONTEND_URL || "https://hackthe6ix.com"}/download-pass?userId=${requestUser}&userType=${userType}`).then((url) => {
+      return resolve(url);
+    }).catch((err) => {
+      return reject(err);
+    });
+  });
+};
+
 /**
  * Generate a QR Code for a list of (External) Users
  *
