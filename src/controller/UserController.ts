@@ -624,11 +624,15 @@ export const getCheckInQR = (
 };
 
 export const getDownloadPassQR = (
-  requestUser: string,
-  userType: AllUserTypes,
+  user: {
+    id: string,
+    type: AllUserTypes,
+    name: string
+  }
 ): Promise<string> => {
+  const { id, type, name } = user;
   return new Promise((resolve, reject) => {
-    qrcode.toDataURL(`${process.env.FRONTEND_URL || "https://hackthe6ix.com"}/download-pass?userId=${requestUser}&userType=${userType}`).then((url) => {
+    qrcode.toDataURL(`${process.env.FRONTEND_URL || "https://hackthe6ix.com"}/download-pass?userId=${id}&userType=${type}&userName=${name}`).then((url) => {
       return resolve(url);
     }).catch((err) => {
       return reject(err);

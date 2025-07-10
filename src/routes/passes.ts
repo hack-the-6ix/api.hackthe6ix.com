@@ -7,6 +7,12 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
+interface User {
+    id: string;
+    type: string;
+    name: string;
+}
+
 const credentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 const issuerId = process.env.GOOGLE_ISSUER_ID;
 const Google = new GoogleAuth({
@@ -81,9 +87,9 @@ async function createPassClass(): Promise<void> {
       }
 }
 
-async function createPassObject(userID: string, userType: string): Promise<string> {
+async function createPassObject(user: User): Promise<string> {
 
-    let objectSuffix = `${userID.replace(/[^\w.-]/g, '_')}`;
+    let objectSuffix = `${user.id.replace(/[^\w.-]/g, '_')}`;
 
     let genericObject = {
         'id': `${issuerId}.${objectSuffix}`,
@@ -100,10 +106,10 @@ async function createPassObject(userID: string, userType: string): Promise<strin
         'barcode': {
             'type': 'QR_CODE',
             'value': JSON.stringify({
-                'userID': userID,
-                'userType': userType,
+                'userID': user.id,
+                'userType': user.type,
             }),        
-            'alternateText': `${userID}`
+            'alternateText': `${user.id}`
         },
         'subheader': {
             'defaultValue': {
@@ -114,7 +120,7 @@ async function createPassObject(userID: string, userType: string): Promise<strin
         'header': {
             'defaultValue': {
                 'language': 'en',
-                'value': `Winston Yu`
+                'value': `${user.name}`
             }
         },
         'heroImage': {
@@ -159,11 +165,12 @@ async function createPassObject(userID: string, userType: string): Promise<strin
     return saveUrl;
 }
 
-const generateApplePass = async (userID: string, userType: string) => {
+const generateApplePass = async (user: User) => {
     try {
         const wwdr = fs.readFileSync(path.join(process.cwd(), './src/assets/passes/apple/wwdr.pem'), 'utf8');
         const signerCert = fs.readFileSync(path.join(process.cwd(), './src/assets/passes/apple/signerCert.pem'), 'utf8');
         const signerKey = fs.readFileSync(path.join(process.cwd(), './src/assets/passes/apple/signerKey.pem'), 'utf8');
+ 
         const pass = await PKPass.from({
             model: path.join(process.cwd(), './src/assets/passes/apple.pass'),
             certificates: {
@@ -171,12 +178,30 @@ const generateApplePass = async (userID: string, userType: string) => {
                 signerCert: signerCert,    
                 signerKey: signerKey,
                 signerKeyPassphrase: process.env.SIGNER_KEY_PASSPHRASE
-            }   
+            },
         });
 
+        pass.auxiliaryFields.push(
+            {
+                "key": "hacker",
+                "label": "HACKER",
+                "value": user.name,
+                "textAlignment": "PKTextAlignmentLeft"
+            }
+        );
+
+        pass.auxiliaryFields.push(
+            {
+                "key": "additionalInfo",
+                "label": "ADDITIONAL INFO",
+                "value": "Accolade East Building",
+                "textAlignment": "PKTextAlignmentRight"
+            }
+        );
+
         const barcodeString = JSON.stringify({
-            userID: userID || "test-id",
-            userType: userType || "test-type",
+            userID: user.id || "test-id",
+            userType: user.type || "test-type",
         })
 
         pass.setBarcodes(barcodeString);
@@ -194,11 +219,16 @@ const generateApplePass = async (userID: string, userType: string) => {
 router.get("/google/hackathon.pkpass", async (req: Request, res: Response) => {
     const userId = req.query.userId as string;
     const userType = req.query.userType as string;
+    const userName = req.query.userName as string;
 
     await createPassClass();
     
     try {
-        const saveUrl = await createPassObject(userId, userType);
+        const saveUrl = await createPassObject({
+            id: userId,
+            type: userType,
+            name: userName || ""
+        });
         res.json({
             saveUrl: saveUrl
         });
@@ -210,11 +240,16 @@ router.get("/google/hackathon.pkpass", async (req: Request, res: Response) => {
 
 router.post('/apple/hackathon.pkpass', async (req: Request, res: Response) => {
 
-    const userID = req.body.userID;
+    const userId = req.body.userId;
     const userType = req.body.userType;
+    const userName = req.body.userName;
     
     try {
-        const buffer = await generateApplePass(userID, userType);
+        const buffer = await generateApplePass({
+            id: userId,
+            type: userType,
+            name: userName || ""
+        });
         res.type("application/vnd.apple.pkpass")
         .set("Content-Disposition", 'inline; filename="hackathon.pkpass"')
         .send(buffer);
@@ -233,9 +268,14 @@ router.post("/test", async (req: Request, res: Response) => {
 router.get("/apple/hackathon.pkpass", async (req: Request, res: Response) => {
     const userId = req.query.userId as string;
     const userType = req.query.userType as string;
+    const userName = req.query.userName as string;
 
     try {
-        const buffer = await generateApplePass(userId, userType);
+        const buffer = await generateApplePass({
+            id: userId,
+            type: userType,
+            name: userName || ""
+        });
         res.type("application/vnd.apple.pkpass")
         .set("Content-Disposition", 'inline; filename="hackathon.pkpass"')
         .send(buffer);

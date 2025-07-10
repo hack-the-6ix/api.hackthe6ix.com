@@ -37,18 +37,6 @@
       }
     ],
     "auxiliaryFields": [
-      {
-        "key": "hacker",
-        "label": "HACKER",
-        "value": "Winston Yu",
-        "textAlignment": "PKTextAlignmentLeft"
-      },
-      {
-        "key": "additionalInfo",
-        "label": "ADDITIONAL INFO",
-        "value": "Accolade East Building",
-        "textAlignment": "PKTextAlignmentRight"
-      }
     ]
   },
   "barcode": {

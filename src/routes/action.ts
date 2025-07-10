@@ -270,12 +270,17 @@ actionRouter.get('/checkInQR', isHacker, (req: Request, res:Response) => {
  * Get QR code to redirect to download pass page
  */
 actionRouter.get('/downloadPassQR', (req: Request, res:Response) => {
-  const { userId, userType } = req.query;
+  const { userId, userType, userName } = req.query;
+  const user = {
+    id: userId as string,
+    type: userType as AllUserTypes,
+    name: userName as string
+  }
   logResponse(
       req,
       res,
       getDownloadPassQR(
-          userId as string, userType as AllUserTypes
+          user
       )
   )
 });
