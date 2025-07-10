@@ -238,33 +238,6 @@ router.get("/google/hackathon.pkpass", async (req: Request, res: Response) => {
     }
 });
 
-router.post('/apple/hackathon.pkpass', async (req: Request, res: Response) => {
-
-    const userId = req.body.userId;
-    const userType = req.body.userType;
-    const userName = req.body.userName;
-    
-    try {
-        const buffer = await generateApplePass({
-            id: userId,
-            type: userType,
-            name: userName || ""
-        });
-        res.type("application/vnd.apple.pkpass")
-        .set("Content-Disposition", 'inline; filename="hackathon.pkpass"')
-        .send(buffer);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: "Failed to generate pass" });
-    }
-});
-
-router.post("/test", async (req: Request, res: Response) => {
-    res.json({
-        message: "true"
-    });
-});
-
 router.get("/apple/hackathon.pkpass", async (req: Request, res: Response) => {
     const userId = req.query.userId as string;
     const userType = req.query.userType as string;
