@@ -916,6 +916,13 @@ export const fields = {
       readCheck: true,
     },
 
+    checkIns: {
+      type: Array,
+      required: false,
+      default: [],
+      readCheck: true,
+    },
+
     lastLogout: {
       type: Number,
       required: true,
@@ -1151,6 +1158,14 @@ export interface IUser extends BasicUser {
   computedApplicationDeadline: number;
   computedRSVPDeadline: number;
   mailingListSubcriberID?: number;
+  checkIns?: {
+    event: {
+      name: string;
+      start: string; // "2025-07-18T21:00:00.000Z"
+      end: string;
+    };
+    checkIns: string[]; // ISO string
+  }[];
 }
 
 export interface IMailMerge {

@@ -1,5 +1,8 @@
+import axios from "axios";
 import { mongoose } from "../services/mongoose_service";
 const ObjectId = mongoose.Types.ObjectId;
+import Airtable from "airtable";
+import { getModels } from "./util/resources";
 
 const NfcSchema = new mongoose.Schema({
     nfcId: { type: String, required: true },
@@ -7,14 +10,9 @@ const NfcSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-const UserSchema = new mongoose.Schema({
-    checkIns: { type: Object, default: {} }
-})
-
 const NfcModel = mongoose.model('nfc-user-assignments', NfcSchema);
 
-delete mongoose.models.User;
-const UserModel = mongoose.model('User', UserSchema);
+const NfcUserModel = getModels().user.mongoose;
 
 export const assignNFCToUser = async (nfcId: string, userId: string) => {
     if (!nfcId || !userId) {
@@ -95,7 +93,7 @@ export const getUserFromNfcId = async (nfcId: string) => {
     }
 
     try {
-        const user = await UserModel.findById(userId);
+        const user = await NfcUserModel.findById(userId);
         return user;
     } catch (error: any) {
         console.log(error);
@@ -104,28 +102,128 @@ export const getUserFromNfcId = async (nfcId: string) => {
 
 }
 
-export const updateCheckInField = async (nfcId: string, field: string, value: boolean) => {
+export const checkIn = async (nfcId: string, field: string) => {
     const userId = await getUserIdFromNfcId(nfcId);
 
-    const existingUser = await UserModel.findById(userId);
+    const existingUser = await NfcUserModel.findById(userId);
     if (!existingUser) {
         throw new Error(`User with ID ${userId} does not exist.`);
     }
 
+    if (!existingUser.checkIns) {
+        throw new Error(`User with ID ${userId} does not have any events.`);
+    }
+
+    const newCheckIn = new Date().toISOString();
+
     try {
-        const response = await UserModel.updateOne(
+        const response = await NfcUserModel.updateOne(
             { _id: new ObjectId(userId), checkIns: { $exists: true } },
             { $set: { 
-                checkIns: {
-                    ...existingUser.checkIns,
-                    [field]: value
-                }
-
+                checkIns: existingUser.checkIns.map((checkIn) => {
+                    if (checkIn.event.name === field) {
+                        return {
+                            ...checkIn,
+                            checkIns: [...checkIn.checkIns, newCheckIn]
+                        }
+                    }
+                    return checkIn;
+                })
             } },
         );
-        return response;
+
+
+        return newCheckIn;
     } catch (error: any) {
         console.log(error);
         throw new Error(`Error updating check-ins: ${error.message}`);
+    }
+}
+
+export const removeLastCheckIn = async (nfcId: string, field: string) => {
+    const userId = await getUserIdFromNfcId(nfcId);
+
+    const existingUser = await NfcUserModel.findById(userId);
+    if (!existingUser) {
+        throw new Error(`User with ID ${userId} does not exist.`);
+    }
+
+    if (!existingUser.checkIns) {
+        throw new Error(`User with ID ${userId} does not have any events.`);
+    }
+
+    const newCheckIns = existingUser.checkIns.map((checkIn: any) => {
+        if (checkIn.event.name === field) {
+            return {
+                ...checkIn,
+                checkIns: checkIn.checkIns.slice(0, -1)
+            }
+        }
+        return checkIn;
+    });
+    try {
+        const response = await NfcUserModel.updateOne(
+            { _id: new ObjectId(userId), checkIns: { $exists: true } },
+            { $set: { checkIns: newCheckIns } }
+        );
+    } catch (error: any) {
+        console.log(error);
+        throw new Error(`Error removing last check-in: ${error.message}`);
+    }
+}
+
+export const populateEvents = async (userId: string) => {
+    const airtableToken = process.env.AIRTABLE_TOKEN;
+
+    let events: any[] = [];
+    try {
+
+        console.log('airtableToken', airtableToken);
+
+        Airtable.configure({
+            endpointUrl: 'https://api.airtable.com',
+            apiKey: airtableToken
+        });
+    
+        const base = Airtable.base("app8WOptWZhwtlUam");
+    
+        const records = await base('Events').select({
+            fields: ['Name', 'Start', 'End']
+        }).all();
+        events = [...records];
+    } catch (error: any) {
+        console.log(error);
+        throw new Error(`Error populating events: ${error.message}`);
+    }
+
+    console.log(events);
+
+    const eventsArray = events.map((event: any) => {
+        return {
+            event: {
+                name: event.fields.Name,
+                start: event.fields.Start,
+                end: event.fields.End
+            },
+            checkIns: [] // when hackers check in append a some sort of date/time to the checkIns array
+        }
+    });
+
+    try {
+        
+        const user = await NfcUserModel.findByIdAndUpdate(
+            userId, 
+            {
+                $set: {
+                    checkIns: eventsArray
+                }
+            },
+            { new: true }
+        );
+
+        return user;
+    } catch (error: any) {
+        console.log(error);
+        throw new Error(`Error populating events: ${error.message}`);
     }
 }
