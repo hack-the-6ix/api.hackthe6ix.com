@@ -587,7 +587,6 @@ Trigger a mailing list sync with ListMonk for a particular user.
 }
 ```
 
-
 ### POST - Verify Mailing List
 
 `/api/action/verifyMailingList`
@@ -1024,6 +1023,118 @@ Remove the given check in notes to a user's check in notes. Returns all the user
 {
   status: 200,
   message: ["<string>"]
+}
+```
+
+### POST - Generate OTP (Organizer)
+
+`/api/action/generate-otp`
+
+Generate a 6-digit OTP code for a volunteer (external user). The OTP expires in 10 minutes and can only be used once.
+
+#### Input Specification
+
+```
+{
+  email: "<email of external user>"
+}
+```
+
+#### Output Specification
+
+```
+{
+  status: 200,
+  message: {
+    success: true,
+    message: "OTP generated successfully",
+    code: "123456",
+    expiration: "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
+### POST - Verify OTP (Organizer)
+
+`/api/action/verify-otp`
+
+Verify a 6-digit OTP code for a volunteer. If valid, the OTP is marked as used and cannot be reused. Returns a JWT token for authentication.
+
+#### Input Specification
+
+```
+{
+  code: "123456",
+  email: "<email of external user>"
+}
+```
+
+#### Output Specification
+
+```
+{
+  status: 200,
+  message: {
+    success: true,
+    message: "OTP verified successfully",
+    user: {
+      // External user object
+    },
+    token: "<jwt_token_for_authentication>"
+  }
+}
+```
+
+### GET - Get All OTPs (Organizer)
+
+`/api/action/get-all-otps`
+
+Retrieve all OTP codes with their usage tracking information.
+
+#### Output Specification
+
+```
+{
+  status: 200,
+  message: {
+    success: true,
+    otps: [
+      {
+        id: "<otp_id>",
+        code: "123456",
+        email: "<email>",
+        used: true,
+        expiration: "2024-01-01T12:00:00.000Z",
+        createdAt: "2024-01-01T11:50:00.000Z",
+        usedBy: "<user_id>",
+        usedAt: "2024-01-01T11:55:00.000Z",
+        issuedBy: "<organizer_email>",
+        usedName: "John Doe"
+      }
+    ]
+  }
+}
+```
+
+### DELETE - Expire OTP (Organizer)
+
+`/api/action/expire-otp/:otpId`
+
+Expire a specific OTP code by setting its expiration time to the current time.
+
+#### Input Specification
+
+`otpId` - The ID of the OTP to expire (passed in URL)
+
+#### Output Specification
+
+```
+{
+  status: 200,
+  message: {
+    success: true,
+    message: "OTP expired successfully"
+  }
 }
 ```
 

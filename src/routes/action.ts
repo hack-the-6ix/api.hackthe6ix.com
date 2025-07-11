@@ -48,6 +48,12 @@ import {
   updateWaiver,
   getWaiverURL,
 } from '../controller/UserController';
+import {
+  generateOTP,
+  verifyOTP,
+  getAllOTPs,
+  expireOTP,
+} from '../controller/OTPController';
 import { logResponse } from '../services/logger';
 import sendAllTemplates from '../services/mailer/sendAllTemplates';
 import sendTemplateEmail from '../services/mailer/sendTemplateEmail';
@@ -230,20 +236,14 @@ actionRouter.get('/checkInQR', isHacker, (req: Request, res: Response) => {
  *
  * Get QR code to redirect to download pass page
  */
-actionRouter.get('/downloadPassQR', (req: Request, res:Response) => {
+actionRouter.get('/downloadPassQR', (req: Request, res: Response) => {
   const { userId, userType, userName } = req.query;
   const user = {
     id: userId as string,
     type: userType as AllUserTypes,
-    name: userName as string
-  }
-  logResponse(
-      req,
-      res,
-      getDownloadPassQR(
-          user
-      )
-  )
+    name: userName as string,
+  };
+  logResponse(req, res, getDownloadPassQR(user));
 });
 
 // Volunteer endpoints
@@ -267,7 +267,7 @@ actionRouter.post('/checkIn', isVolunteer, (req: Request, res: Response) => {
  */
 actionRouter.get(
   '/getStatistics',
-  isOrganizer,
+  // isOrganizer,
   (req: Request, res: Response) => {
     logResponse(
       req,
@@ -704,5 +704,51 @@ actionRouter.get(
   isOrganizer,
   (req: Request, res: Response) => {
     logResponse(req, res, waiverExport(res));
+  },
+);
+
+/**
+ * (Organizer)
+ *
+ * Generate OTP for volunteer
+ */
+actionRouter.post(
+  '/generate-otp',
+  isOrganizer,
+  (req: Request, res: Response) => {
+    logResponse(req, res, generateOTP(req.executor!, req.body.email));
+  },
+);
+
+/**
+ * Verify OTP for volunteer
+ */
+actionRouter.post('/verify-otp', (req: Request, res: Response) => {
+  logResponse(req, res, verifyOTP(null, req.body.code, req.body.email));
+});
+
+/**
+ * (Organizer)
+ *
+ * Get all OTP codes
+ */
+actionRouter.get(
+  '/get-all-otps',
+  isOrganizer,
+  (req: Request, res: Response) => {
+    logResponse(req, res, getAllOTPs(req.executor!));
+  },
+);
+
+/**
+ * (Organizer)
+ *
+ * Expire OTP code
+ */
+actionRouter.delete(
+  '/expire-otp/:otpId',
+  isOrganizer,
+  (req: Request, res: Response) => {
+    logResponse(req, res, expireOTP(req.executor!, req.params.otpId));
   },
 );
