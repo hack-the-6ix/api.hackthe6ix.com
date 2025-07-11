@@ -2,7 +2,7 @@ import express, {Request, Response} from "express";
 
 import { isConnected } from "../services/mongoose_service";
 
-import { assignNFCToUser, getUserIdFromNfcId, getUserFromNfcId, deleteAssignmentByNfc, deleteAssignmentByUser, updateCheckInField } from "../controller/NfcController";
+import { assignNFCToUser, getUserIdFromNfcId, getUserFromNfcId, deleteAssignmentByNfc, deleteAssignmentByUser, checkIn, populateEvents } from "../controller/NfcController";
 
 import { isVolunteer } from "../models/validator";
 
@@ -57,30 +57,27 @@ nfcRouter.get('/getUser/:nfcId', async (req: Request, res: Response) => {
     }
 });
 
-nfcRouter.post('/updateCheckInsFromNFC', async (req: Request, res: Response) => {
-    const { nfcId, checkInEvent, value } = req.body;
-
-    const events = [
-        'hackerCheckIn',
-        'lunchOne',
-        'dinnerOne',
-        'eventOne',
-        'snackOne',
-        'lunchTwo',
-        'dinnerTwo'
-    ]
-
-    if (checkInEvent === undefined || !events.includes(checkInEvent)) {
-        return res.status(400).json({ error: 'Invalid check-in event' });
-    }
+nfcRouter.post('/checkInFromNFC', async (req: Request, res: Response) => {
+    const { nfcId, checkInEvent } = req.body;
 
     try {
-        const response = await updateCheckInField(nfcId, checkInEvent, value);
+        const response = await checkIn(nfcId, checkInEvent);
         return res.status(200).json({ response });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to update check-ins' });
     }
 
+});
+
+nfcRouter.post('/populateEvents', async (req: Request, res: Response) => {
+    const { userId } = req.body;
+
+    try {
+        const response = await populateEvents(userId);
+        return res.status(200).json({ response });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to populate events' });
+    }
 });
 
 export default nfcRouter;
