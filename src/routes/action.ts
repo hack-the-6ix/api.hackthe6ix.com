@@ -267,7 +267,7 @@ actionRouter.post('/checkIn', isVolunteer, (req: Request, res: Response) => {
  */
 actionRouter.get(
   '/getStatistics',
-  // isOrganizer,
+  isOrganizer,
   (req: Request, res: Response) => {
     logResponse(
       req,
