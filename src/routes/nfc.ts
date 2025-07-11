@@ -2,7 +2,16 @@ import express, {Request, Response} from "express";
 
 import { isConnected } from "../services/mongoose_service";
 
-import { assignNFCToUser, getUserIdFromNfcId, getUserFromNfcId, deleteAssignmentByNfc, deleteAssignmentByUser, checkIn, populateEvents } from "../controller/NfcController";
+import { 
+    assignNFCToUser, 
+    getUserIdFromNfcId, 
+    getUserFromNfcId, 
+    deleteAssignmentByNfc, 
+    deleteAssignmentByUser, 
+    checkIn, 
+    populateEvents,
+    removeLastCheckIn 
+} from "../controller/NfcController";
 
 import { isVolunteer } from "../models/validator";
 
@@ -66,7 +75,17 @@ nfcRouter.post('/checkInFromNFC', async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(500).json({ error: 'Failed to update check-ins' });
     }
+});
 
+nfcRouter.post('/removeLastCheckIn', async (req: Request, res: Response) => {
+    const { nfcId, checkInEvent } = req.body;
+
+    try {
+        const response = await removeLastCheckIn(nfcId, checkInEvent);
+        return res.status(200).json({ response });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to update check-ins' });
+    }
 });
 
 nfcRouter.post('/populateEvents', async (req: Request, res: Response) => {

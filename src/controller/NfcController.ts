@@ -140,6 +140,38 @@ export const checkIn = async (nfcId: string, field: string) => {
     }
 }
 
+export const removeLastCheckIn = async (nfcId: string, field: string) => {
+    const userId = await getUserIdFromNfcId(nfcId);
+
+    const existingUser = await NfcUserModel.findById(userId);
+    if (!existingUser) {
+        throw new Error(`User with ID ${userId} does not exist.`);
+    }
+
+    if (!existingUser.checkIns) {
+        throw new Error(`User with ID ${userId} does not have any events.`);
+    }
+
+    const newCheckIns = existingUser.checkIns.map((checkIn: any) => {
+        if (checkIn.event.name === field) {
+            return {
+                ...checkIn,
+                checkIns: checkIn.checkIns.slice(0, -1)
+            }
+        }
+        return checkIn;
+    });
+    try {
+        const response = await NfcUserModel.updateOne(
+            { _id: new ObjectId(userId), checkIns: { $exists: true } },
+            { $set: { checkIns: newCheckIns } }
+        );
+    } catch (error: any) {
+        console.log(error);
+        throw new Error(`Error removing last check-in: ${error.message}`);
+    }
+}
+
 export const populateEvents = async (userId: string) => {
     const airtableToken = process.env.AIRTABLE_TOKEN;
 
