@@ -82,7 +82,7 @@ export const getBearerToken = (
 export const getTokenFromHeader = (req: Request): string =>
   req['headers']['x-access-token'] ||
   getBearerToken(req['headers']['authorization']) ||
-  req.body.token;
+  req.body?.token;
 export const getAPITokenFromHeader = (req: Request): string =>
   req['headers']['x-api-token'] as string;
 
