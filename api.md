@@ -1155,7 +1155,7 @@ Returns a data URI with the user's check in code.
 
 ### POST - Check in user (Volunteer)
 
-`/api/action/checkIN`
+`/api/action/checkIn`
 
 Checks in a (External) User.
 
