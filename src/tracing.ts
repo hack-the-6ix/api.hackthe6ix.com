@@ -29,7 +29,13 @@ export const init = (serviceName: string) => {
     instrumentations: [
       new HttpInstrumentation({
         ignoreIncomingRequestHook(req) {
-          return req.url?.startsWith('/health') ?? false;
+          if (req.url?.startsWith('/health')) {
+            return true; // Ignore health check requests
+          }
+          else if (req.url?.startsWith('/api/action/getNextQueuedDiscordVerification')) {
+            return Math.random() < 0.008; // Only sample 0.8% of Discord bot queue requests
+          }
+          return false;
         }
       }),
       new ExpressInstrumentation(),
