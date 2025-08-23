@@ -33,7 +33,7 @@ export const init = (serviceName: string) => {
             return true; // Ignore health check requests
           }
           else if (req.url?.startsWith('/api/action/getNextQueuedDiscordVerification')) {
-            return Math.random() < 0.008; // Only sample 0.8% of Discord bot queue requests
+            return Math.random() >= 0.008; // Only sample 0.8% of Discord bot queue requests
           }
           return false;
         }
